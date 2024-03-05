@@ -88,49 +88,74 @@ class ProfileController extends Controller
     {
         $authorizationHeader = $request->header('Authorization');
         $token = str_replace('Bearer ', '', $authorizationHeader);
-        if ($authorizationHeader) {
-            try {
-                $decoded = JWT::decode($token, new Key($this->tokenKey, 'HS256'));
-                if ($decoded) {
-                    $userToken = Token::where('token',$token)->first();
-                    $userRefreshToken = RefreshToken::where('user_id',$decoded->id)->first();
-                    
-                    if ($userToken and $userToken->expired > Carbon::now()) {
-                        $userToken->delete();
-                        $userRefreshToken->delete();
-                        return response()->json([
-                            "status" => true,
-                            "message" => "User logout successfully",
-                        ]);
-                    }
-                    return response()->json([
-                        "status" => false,
-                        "message" => "Token expired",
-                    ]);
-                }
-            } catch (ExpiredException $e) {
-                return response()->json([
-                    "status" => false,
-                    "message" => "Token expired",
-                    "error" => $e
-                ]);
-            } catch (BeforeValidException $e) {
-                return response()->json([
-                    "status" => false,
-                    "message" => "Token not yet valid",
-                    "error" => $e
-                ]);
-            } catch (\Exception $e) {
-                return response()->json([
-                    "status" => false,
-                    "message" => "Token is invalid",
-                    "error" => $e
-                ]);
-            }
+        $decoded = JWT::decode($token, new Key($this->tokenKey, 'HS256'));
+
+        $userToken = Token::where('token',$token)->first();
+        $userRefreshToken = RefreshToken::where('user_id',$decoded->id)->first();
+        
+        if ($userToken and $userToken->expired > Carbon::now()) {
+            $userToken->delete();
+            $userRefreshToken->delete();
+            return response()->json([
+                "status" => true,
+                "message" => "User logout successfully",
+            ]);
         }
         return response()->json([
             "status" => false,
-            "message" => "Authorization header cannot be empty",
+            "message" => "Token expired",
         ]);
+
+        // $authorizationHeader = $request->header('Authorization');
+        // $token = str_replace('Bearer ', '', $authorizationHeader);
+        // if ($authorizationHeader) {
+        //     try {
+        //         $decoded = JWT::decode($token, new Key($this->tokenKey, 'HS256'));
+        //         if ($decoded) {
+        //             $userToken = Token::where('token',$token)->first();
+        //             $userRefreshToken = RefreshToken::where('user_id',$decoded->id)->first();
+                    
+        //             if ($userToken and $userToken->expired > Carbon::now()) {
+        //                 $userToken->delete();
+        //                 $userRefreshToken->delete();
+        //                 return response()->json([
+        //                     "status" => true,
+        //                     "message" => "User logout successfully",
+        //                 ]);
+        //             }
+        //             return response()->json([
+        //                 "status" => false,
+        //                 "message" => "Token expired",
+        //             ]);
+        //         }
+        //     } catch (ExpiredException $e) {
+        //         return response()->json([
+        //             "status" => false,
+        //             "message" => "Token expired",
+        //             "error" => $e
+        //         ]);
+        //     } catch (BeforeValidException $e) {
+        //         return response()->json([
+        //             "status" => false,
+        //             "message" => "Token not yet valid",
+        //             "error" => $e
+        //         ]);
+        //     } catch (\Exception $e) {
+        //         return response()->json([
+        //             "status" => false,
+        //             "message" => "Token is invalid",
+        //             "error" => $e
+        //         ]);
+        //     }
+        // }
+        // return response()->json([
+        //     "status" => false,
+        //     "message" => "Authorization header cannot be empty",
+        // ]);
+    }
+
+    public function updateProfile()
+    {
+        
     }
 }

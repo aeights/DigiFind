@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\LoginRequest;
 use App\Models\RefreshToken;
 use App\Models\Token;
+use App\Models\User;
 use Carbon\Carbon;
 use Firebase\JWT\BeforeValidException;
 use Firebase\JWT\ExpiredException;
@@ -49,17 +50,27 @@ class LoginController extends Controller
                 $token = JWT::encode($payloadToken, $this->tokenKey, 'HS256');
                 $refreshToken = JWT::encode($payloadRefreshToken, $this->refreshTokenKey, 'HS256');
                 
-                $userToken = Token::create([
-                    'user_id' => $user->id,
-                    'token' => $token,
-                    'expired' => Carbon::now()->addDay()
-                ]);
+                $userToken = Token::updateOrCreate(
+                    [
+                        'user_id' => $user->id
+                    ],
+                    [
+                        'user_id' => $user->id,
+                        'token' => $token,
+                        'expired' => Carbon::now()->addDay()
+                    ]
+                );
                 
-                $userRefreshToken = RefreshToken::create([
-                    'user_id' => $user->id,
-                    'token' => $refreshToken,
-                    'expired' => Carbon::now()->addMonth(3)
-                ]);
+                $userRefreshToken = RefreshToken::updateOrCreate(
+                    [
+                        'user_id' => $user->id
+                    ],
+                    [
+                        'user_id' => $user->id,
+                        'token' => $refreshToken,
+                        'expired' => Carbon::now()->addMonth(3)
+                    ]
+                );
 
                 if(!empty($token)){
                     return response()->json([
