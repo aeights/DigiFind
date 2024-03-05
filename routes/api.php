@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\API\Auth\ForgotPasswordController;
 use App\Http\Controllers\API\Auth\LoginController;
 use App\Http\Controllers\API\Auth\RegisterController;
 use App\Http\Controllers\API\Home\ProfileController;
@@ -28,6 +29,11 @@ Route::controller(LoginController::class)->group(function () {
 
 Route::controller(RegisterController::class)->group(function () {
     Route::post('register', 'register')->name('api.register');
+});
+
+Route::controller(ForgotPasswordController::class)->group(function () {
+    Route::post('send-otp', 'sendOtp')->name('api.send-otp');
+    Route::post('reset-password', 'resetPassword')->name('api.reset-password');
 });
 
 Route::controller(ProfileController::class)->group(function () {

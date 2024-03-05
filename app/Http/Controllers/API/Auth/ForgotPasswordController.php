@@ -3,9 +3,115 @@
 namespace App\Http\Controllers\API\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Mail\SendOTP;
+use App\Models\OneTimePassword;
+use App\Models\User;
+use Error;
+use Exception;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Validation\ValidationException;
 
 class ForgotPasswordController extends Controller
 {
-    //
+    public function sendOtp(Request $request)
+    {
+        try {
+            $validated = $request->validate([
+                'email' => 'email|required|exists:users,email'
+            ]);
+    
+            if (!$validated) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Validation failed',
+                    'errors' => $request->errors()
+                ]);
+            }
+    
+            $otp = rand(100000, 999999);
+            $user = User::where('email', $request->email)->first();
+            $makeOtp = OneTimePassword::updateOrCreate(
+                [
+                    'user_id' => $user->id
+                ],
+                [
+                    'otp' => $otp,
+                ]
+            );
+    
+            $data = [
+                'title' => 'Reset Password OTP',
+                'body' => "Your OTP Code: {$otp}"
+            ];
+    
+            Mail::to($user->email)->send(new SendOTP($data));
+    
+            return response()->json([
+                'status' => true,
+                'message' => "OTP successfully sent to {$user->email}",
+                'data' => $makeOtp
+            ]);
+        } catch (ValidationException $e) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Validation failed',
+                'errors' => $e->errors()
+            ]);
+        } catch (Error $e) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Error',
+                'error' => $e->getMessage()
+            ]);
+        }
+    }
+
+    public function resetPassword(Request $request)
+    {
+        try {
+            $validated = $request->validate([
+                'user_id' => 'required',
+                'new_password' => 'required|min:6',
+                'confirm_password' => 'required|min:6'
+            ]);
+    
+            $user = User::find($request->user_id);
+    
+            if (!$user) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'User not found',
+                ]);
+            }
+    
+            if ($request->new_password == $request->confirm_password) {
+                $user->update(['password' => Hash::make($request->new_password)]);
+    
+                return response()->json([
+                    'status' => true,
+                    'message' => 'Password reset successfully',
+                    'data' => $user
+                ]);
+            }
+    
+            return response()->json([
+                'status' => false,
+                'message' => 'Password not match',
+            ]);
+        } catch (ValidationException $e) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Validation failed',
+                'errors' => $e->errors()
+            ]);
+        } catch (Exception $e) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Error',
+                'error' => $e->getMessage()
+            ]);
+        }
+    }
 }
