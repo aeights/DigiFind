@@ -75,7 +75,7 @@ class LoginController extends Controller
                 if(!empty($token)){
                     return response()->json([
                         "status" => true,
-                        "message" => "User logged in succcessfully",
+                        "message" => "User login successful",
                         "token" => $token,
                         "refresh_token" => $refreshToken,
                     ]);
@@ -96,9 +96,8 @@ class LoginController extends Controller
 
     public function generateNewToken(Request $request)
     {
-        $authorizationHeader = $request->header('Authorization');
-        $token = str_replace('Bearer ', '', $authorizationHeader);
-        if ($authorizationHeader) {
+        $token = $request->bearerToken();
+        if ($token) {
             try {
                 $decoded = JWT::decode($token, new Key($this->refreshTokenKey, 'HS256'));
                 if ($decoded) {

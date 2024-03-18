@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\API\Home;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\UpdateProfileRequest;
 use App\Models\RefreshToken;
 use App\Models\Token;
 use App\Models\User;
@@ -154,7 +155,7 @@ class ProfileController extends Controller
         // ]);
     }
 
-    public function updateProfile()
+    public function updateProfile(UpdateProfileRequest $updateProfileRequest)
     {
         
     }

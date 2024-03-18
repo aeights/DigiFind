@@ -30,9 +30,8 @@ class ApiAuth
      */
     public function handle(Request $request, Closure $next): Response
     {
-        $authorizationHeader = $request->header('Authorization');
-        $token = str_replace('Bearer ', '', $authorizationHeader);
-        if ($authorizationHeader) {
+        $token = $request->bearerToken();
+        if ($token) {
             try {
                 $decoded = JWT::decode($token, new Key($this->tokenKey, 'HS256'));
                 if ($decoded) {

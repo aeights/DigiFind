@@ -3,6 +3,9 @@
 use App\Http\Controllers\API\Auth\ForgotPasswordController;
 use App\Http\Controllers\API\Auth\LoginController;
 use App\Http\Controllers\API\Auth\RegisterController;
+use App\Http\Controllers\API\Content\AboutUsController;
+use App\Http\Controllers\API\Content\ContactUsController;
+use App\Http\Controllers\API\Content\OnboardingController;
 use App\Http\Controllers\API\Home\ProfileController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -22,6 +25,7 @@ use Illuminate\Support\Facades\Route;
 //     return $request->user();
 // });
 
+// Auth endpoints
 Route::controller(LoginController::class)->group(function () {
     Route::post('login', 'login')->name('api.login');
     Route::get('new-token', 'generateNewToken')->name('api.new-token');
@@ -33,12 +37,28 @@ Route::controller(RegisterController::class)->group(function () {
 
 Route::controller(ForgotPasswordController::class)->group(function () {
     Route::post('send-otp', 'sendOtp')->name('api.send-otp');
+    Route::post('verif-otp', 'verifOtp')->name('api.verif-otp');
     Route::post('reset-password', 'resetPassword')->name('api.reset-password');
 });
 
-Route::controller(ProfileController::class)->group(function () {
-    Route::middleware(['api.auth'])->group(function () {
+// Content endpoints
+Route::controller(OnboardingController::class)->group(function () {
+    Route::get('content/onboarding','index')->name('api.onboarding');
+});
+
+Route::controller(ContactUsController::class)->group(function () {
+    Route::get('content/contact-us','index')->name('api.contact-us');
+});
+
+Route::controller(AboutUsController::class)->group(function () {
+    Route::get('content/about-us','index')->name('api.about-us');
+});
+
+// Home endpoints
+Route::middleware(['api.auth'])->group(function () {
+    Route::controller(ProfileController::class)->group(function () {
         Route::get('profile', 'profile')->name('api.profile');
+        Route::post('profile/update', 'updateProfile')->name('api.profile.update');
         Route::get('logout', 'logout')->name('api.logout');
     });
 });

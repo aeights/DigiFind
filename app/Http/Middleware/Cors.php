@@ -6,7 +6,7 @@ use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
-class ApiRefresh
+class Cors
 {
     /**
      * Handle an incoming request.
@@ -15,6 +15,9 @@ class ApiRefresh
      */
     public function handle(Request $request, Closure $next): Response
     {
-        return $next($request);
+        return $next($request)
+            ->header('Access-Allow-Control-Origin', '*')
+            ->header('Access-Allow-Control-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
+            ->header('Access-Allow-Control-Headers', 'Accept, Authorization, Content-Type');
     }
 }

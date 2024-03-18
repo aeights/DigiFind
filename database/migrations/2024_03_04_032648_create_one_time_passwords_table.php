@@ -16,6 +16,7 @@ return new class extends Migration
             $table->id();
             $table->foreignIdFor(User::class);
             $table->string('otp');
+            $table->timestamp('expired');
             $table->timestamps();
         });
     }

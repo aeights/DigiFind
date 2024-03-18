@@ -15,9 +15,11 @@ return new class extends Migration
             $table->id();
             $table->string('nik')->unique();
             $table->string('name');
+            $table->enum('gender',['male','female']);
+            $table->string('address');
             $table->string('email')->unique();
-            $table->string('password');
             $table->string('phone')->unique();
+            $table->string('password');
             $table->timestamps();
         });
     }

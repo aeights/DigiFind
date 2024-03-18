@@ -25,6 +25,8 @@ class RegisterController extends Controller
             $user = User::create([
                 'nik' => $registerRequest->nik,
                 'name' => $registerRequest->name,
+                'gender' => $registerRequest->gender,
+                'address' => $registerRequest->address,
                 'email' => $registerRequest->email,
                 'password' => $registerRequest->password,
                 'phone' => $registerRequest->phone,
@@ -32,7 +34,7 @@ class RegisterController extends Controller
 
             return response()->json([
                 "status" => true,
-                "message" => "User registered successfully"
+                "message" => "User registration is successful"
             ]);
         }
 

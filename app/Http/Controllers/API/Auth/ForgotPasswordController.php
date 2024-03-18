@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Mail\SendOTP;
 use App\Models\OneTimePassword;
 use App\Models\User;
+use Carbon\Carbon;
 use Error;
 use Exception;
 use Illuminate\Http\Request;
@@ -38,6 +39,7 @@ class ForgotPasswordController extends Controller
                 ],
                 [
                     'otp' => $otp,
+                    'expired' => Carbon::now()->addMinutes(5),
                 ]
             );
     
@@ -51,7 +53,42 @@ class ForgotPasswordController extends Controller
             return response()->json([
                 'status' => true,
                 'message' => "OTP successfully sent to {$user->email}",
-                'data' => $makeOtp
+                'email' => $request->email
+            ]);
+        } catch (ValidationException $e) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Validation failed',
+                'errors' => $e->errors()
+            ]);
+        } catch (Error $e) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Error',
+                'error' => $e->getMessage()
+            ]);
+        }
+    }
+
+    public function verifOtp(Request $request)
+    {
+        try {
+            $validated = $request->validate([
+                'email' => 'email|required|exists:users,email',
+                'otp' => 'required|min:6'
+            ]);
+
+            $user = User::where('email', $request->email)->first();
+            $otp = OneTimePassword::where('user_id',$user->id)->first();
+            if ($otp and $otp->otp == $request->otp and $otp->expired > Carbon::now()) {
+                return response()->json([
+                    'status' => true,
+                    'message' => "OTP verification success",
+                ]);
+            }
+            return response()->json([
+                'status' => false,
+                'message' => "OTP not match",
             ]);
         } catch (ValidationException $e) {
             return response()->json([
