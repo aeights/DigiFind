@@ -7,6 +7,7 @@ use App\Http\Controllers\API\Content\AboutUsController;
 use App\Http\Controllers\API\Content\ContactUsController;
 use App\Http\Controllers\API\Content\OnboardingController;
 use App\Http\Controllers\API\Home\ProfileController;
+use App\Http\Controllers\API\PublicReport\PublicReportController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -60,5 +61,15 @@ Route::middleware(['api.auth'])->group(function () {
         Route::get('profile', 'profile')->name('api.profile');
         Route::post('profile/update', 'updateProfile')->name('api.profile.update');
         Route::get('logout', 'logout')->name('api.logout');
+    });
+
+    Route::controller(PublicReportController::class)->group(function () {
+        Route::prefix('public-report')->group(function () {
+            Route::get('/','index')->name('api.public-report');
+            Route::get('/{id}','show')->name('api.public-report');
+            Route::post('store','store')->name('api.public-report.store');
+            Route::post('update/{id}','update')->name('api.public-report.update');
+            Route::get('delete/{id}','delete')->name('api.public-report.delete');
+        });
     });
 });

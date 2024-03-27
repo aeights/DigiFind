@@ -14,7 +14,8 @@ class DatabaseSeeder extends Seeder
     {
         $this->call([
             AboutTypeSeeder::class,
-            AboutSeeder::class
+            AboutSeeder::class,
+            PublicCategorySeeder::class
         ]);
     }
 }

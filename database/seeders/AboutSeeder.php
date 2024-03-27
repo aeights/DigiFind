@@ -31,13 +31,13 @@ class AboutSeeder extends Seeder
             ],
         ];
         $path = [
-            asset('assets/search-barang-biru.gif'),
-            asset('assets/siaran-biru.gif'),
-            asset('assets/gift-biru.gif'),
+            public_path('assets/search-barang-biru.gif'),
+            public_path('assets/siaran-biru.gif'),
+            public_path('assets/gift-biru.gif'),
         ];
         foreach ($assets as $key => $value) {
             $asset = About::create($value);
-            $asset->addMediaFromUrl($path[$key])->toMediaCollection('onboarding');
+            $asset->addMedia($path[$key])->preservingOriginal()->toMediaCollection('onboarding');
         }
     }
 }
