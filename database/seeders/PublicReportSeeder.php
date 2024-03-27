@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\PublicReport;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
@@ -12,6 +13,6 @@ class PublicReportSeeder extends Seeder
      */
     public function run(): void
     {
-        //
+        PublicReport::factory()->count(50)->create();
     }
 }

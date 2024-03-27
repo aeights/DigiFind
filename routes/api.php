@@ -71,5 +71,6 @@ Route::middleware(['api.auth'])->group(function () {
             Route::post('update/{id}','update')->name('api.public-report.update');
             Route::get('delete/{id}','delete')->name('api.public-report.delete');
         });
+        Route::get('user/public-report','userReports')->name('api.user.public-report');
     });
 });

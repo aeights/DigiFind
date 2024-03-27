@@ -15,7 +15,8 @@ class DatabaseSeeder extends Seeder
         $this->call([
             AboutTypeSeeder::class,
             AboutSeeder::class,
-            PublicCategorySeeder::class
+            PublicCategorySeeder::class,
+            PublicReportSeeder::class,
         ]);
     }
 }

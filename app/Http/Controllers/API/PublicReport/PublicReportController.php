@@ -4,15 +4,39 @@ namespace App\Http\Controllers\API\PublicReport;
 
 use App\Http\Controllers\Controller;
 use App\Models\PublicReport;
+use Firebase\JWT\JWT;
+use Firebase\JWT\Key;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 class PublicReportController extends Controller
 {
-    public function index()
+    private $tokenKey;
+    private $refreshTokenKey;
+
+    public function __construct()
     {
-        
+        $this->tokenKey = config('services.jwt.token_key');
+        $this->refreshTokenKey = config('services.jwt.refresh_token_key');
+    }
+
+    public function index(Request $request)
+    {
+        try {
+            $reports = PublicReport::orderBy('created_at','desc')->offset($request->offset)->limit($request->limit)->get();
+            return response()->json([
+                "status" => true,
+                "message" => "Get list public report is successful",
+                'data' => $reports
+            ]);
+        } catch (\Exception $ex) {
+            return response()->json([
+                "status" => false,
+                "message" => $ex->getMessage(),
+                "error" => $ex
+            ]);
+        }
     }
 
     public function show($id)
@@ -132,6 +156,26 @@ class PublicReportController extends Controller
                 "status" => false,
                 "message" => $th->getMessage(),
                 "error" => $th
+            ]);
+        }
+    }
+
+    public function userReports(Request $request)
+    {
+        try {
+            $token = $request->bearerToken();
+            $decoded = JWT::decode($token, new Key($this->tokenKey, 'HS256'));
+            $reports = PublicReport::where('user_id',$decoded->id)->orderBy('created_at','desc')->offset($request->offset)->limit($request->limit)->get();
+            return response()->json([
+                "status" => true,
+                "message" => "Get user public report is successful",
+                'data' => $reports
+            ]);
+        } catch (\Exception $ex) {
+            return response()->json([
+                "status" => false,
+                "message" => $ex->getMessage(),
+                "error" => $ex
             ]);
         }
     }
