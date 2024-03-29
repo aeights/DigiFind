@@ -60,6 +60,7 @@ Route::middleware(['api.auth'])->group(function () {
     Route::controller(ProfileController::class)->group(function () {
         Route::get('profile', 'profile')->name('api.profile');
         Route::post('profile/update', 'updateProfile')->name('api.profile.update');
+        Route::post('profile/change-password', 'changePassword')->name('api.profile.change-password');
         Route::get('logout', 'logout')->name('api.logout');
     });
 

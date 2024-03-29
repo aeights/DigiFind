@@ -7,11 +7,11 @@ use App\Models\RefreshToken;
 use App\Models\Token;
 use App\Models\User;
 use Carbon\Carbon;
-use Exception;
 use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 
 class ProfileController extends Controller
@@ -27,8 +27,7 @@ class ProfileController extends Controller
     
     public function profile(Request $request)
     {
-        $authorizationHeader = $request->header('Authorization');
-        $token = str_replace('Bearer ', '', $authorizationHeader);
+        $token = $request->bearerToken();
         $decoded = JWT::decode($token, new Key($this->tokenKey, 'HS256'));
         $user = User::find($decoded->id);
         return response()->json([
@@ -40,8 +39,7 @@ class ProfileController extends Controller
 
     public function logout(Request $request)
     {
-        $authorizationHeader = $request->header('Authorization');
-        $token = str_replace('Bearer ', '', $authorizationHeader);
+        $token = $request->bearerToken();
         $decoded = JWT::decode($token, new Key($this->tokenKey, 'HS256'));
 
         $userToken = Token::where('token',$token)->first();
@@ -66,7 +64,6 @@ class ProfileController extends Controller
         try {
             $token = $request->bearerToken();
             $decoded = JWT::decode($token, new Key($this->tokenKey, 'HS256'));
-            $userToken = Token::where('token',$token)->first();
             $validated = $request->validate([
                 'name' => 'nullable',
                 'gender' => 'nullable|in:male,female',
@@ -88,7 +85,44 @@ class ProfileController extends Controller
                 "message" => "Validation fails",
                 "error" => $ex->errors()
             ]);
-        } catch (Exception $ex) {
+        } catch (\Exception $ex) {
+            return response()->json([
+                "status" => false,
+                "message" => $ex->getMessage(),
+            ]);
+        }
+    }
+
+    public function changePassword(Request $request)
+    {
+        try {
+            $validated = $request->validate([
+                'new_password' => 'required|min:6',
+                'confirm_password' => 'required|min:6',
+            ]);
+
+            if ($validated and $request->new_password == $request->confirm_password) {
+                $token = $request->bearerToken();
+                $decoded = JWT::decode($token, new Key($this->tokenKey, 'HS256'));
+                $user = User::find($decoded->id)->update([
+                    'password' => Hash::make($request->new_password)
+                ]);
+                $userToken = Token::where('token',$token)->first();
+                $userRefreshToken = RefreshToken::where('user_id',$decoded->id)->first();
+                $userToken->delete();
+                $userRefreshToken->delete();
+                return response()->json([
+                    "status" => true,
+                    "message" => 'Change password is successful',
+                ]);
+            }
+        } catch (ValidationException $ex) {
+            return response()->json([
+                "status" => false,
+                "message" => "Validation fails",
+                "error" => $ex->errors()
+            ]);
+        } catch (\Exception $ex) {
             return response()->json([
                 "status" => false,
                 "message" => $ex->getMessage(),

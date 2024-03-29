@@ -25,6 +25,9 @@ class PublicReportController extends Controller
     {
         try {
             $reports = PublicReport::orderBy('created_at','desc')->offset($request->offset)->limit($request->limit)->get();
+            foreach ($reports as $key => $value) {
+                $value->getMedia('public_report');
+            }
             return response()->json([
                 "status" => true,
                 "message" => "Get list public report is successful",
@@ -43,6 +46,7 @@ class PublicReportController extends Controller
     {
         try {
             $report = PublicReport::findOrFail($id);
+            $report->getMedia('public_report');
             return response()->json([
                 "status" => true,
                 "message" => "Get public report is successful",
@@ -68,15 +72,13 @@ class PublicReportController extends Controller
                 'location' => 'required',
                 'description' => 'required',
             ]);
-            return response()->json([
-                "status" => true,
-                "message" => $request->file(),
-            ]);
             if ($validated) {
                 DB::beginTransaction();
                 $publicReport = PublicReport::create($validated);
                 if ($request->hasFile('media')) {
-                    $publicReport->addMediaFromRequest($request->file('media'))->toMediaCollection('public_report');
+                    foreach ($request->file('media') as $key => $value) {
+                        $publicReport->addMedia($value)->toMediaCollection('public_report');
+                    }
                 }
                 DB::commit();
                 return response()->json([
@@ -166,10 +168,13 @@ class PublicReportController extends Controller
             $token = $request->bearerToken();
             $decoded = JWT::decode($token, new Key($this->tokenKey, 'HS256'));
             $reports = PublicReport::where('user_id',$decoded->id)->orderBy('created_at','desc')->offset($request->offset)->limit($request->limit)->get();
+            foreach ($reports as $key => $value) {
+                $value->getMedia('public_report');
+            }
             return response()->json([
                 "status" => true,
                 "message" => "Get user public report is successful",
-                'data' => $reports
+                "data" => $reports,
             ]);
         } catch (\Exception $ex) {
             return response()->json([
