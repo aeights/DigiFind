@@ -67,11 +67,17 @@ Route::middleware(['api.auth'])->group(function () {
     Route::controller(PublicReportController::class)->group(function () {
         Route::prefix('public-report')->group(function () {
             Route::get('/','index')->name('api.public-report');
-            Route::get('/{id}','show')->name('api.public-report');
+            Route::get('read/{id}','show')->name('api.public-report');
             Route::post('store','store')->name('api.public-report.store');
             Route::post('update/{id}','update')->name('api.public-report.update');
             Route::get('delete/{id}','delete')->name('api.public-report.delete');
+            
+            Route::get('search','search')->name('api.public-report.search');
+            Route::get('save/{id}','save')->name('api.public-report.save');
+            Route::post('comment','comment')->name('api.public-report.comment');
+            Route::post('report','report')->name('api.public-report.report');
         });
         Route::get('user/public-report','userReports')->name('api.user.public-report');
+        Route::get('user/public-report/saved','userSavedReports')->name('api.user.public-report.saved');
     });
 });

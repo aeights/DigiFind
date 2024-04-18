@@ -15,16 +15,16 @@ class PublicCategorySeeder extends Seeder
     {
         $categories = [
             [
-                'name' => 'Jalan',
-                'slug' => 'jalan'
+                'slug' => 'jalan',
+                'name' => 'Jalan'
             ],
             [
-                'name' => 'Kendaraan',
-                'slug' => 'kendaraan'
+                'slug' => 'kendaraan',
+                'name' => 'Kendaraan'
             ],
             [
-                'name' => 'Bangunan',
-                'slug' => 'bangunan'
+                'slug' => 'bangunan',
+                'name' => 'Bangunan'
             ],
         ];
 
