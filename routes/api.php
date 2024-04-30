@@ -7,7 +7,9 @@ use App\Http\Controllers\API\Content\AboutUsController;
 use App\Http\Controllers\API\Content\ContactUsController;
 use App\Http\Controllers\API\Content\OnboardingController;
 use App\Http\Controllers\API\Home\ProfileController;
+use App\Http\Controllers\API\LostReport\LostReportController;
 use App\Http\Controllers\API\PublicReport\PublicReportController;
+use App\Http\Controllers\API\User\UserController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -58,10 +60,18 @@ Route::controller(AboutUsController::class)->group(function () {
 // Home endpoints
 Route::middleware(['api.auth'])->group(function () {
     Route::controller(ProfileController::class)->group(function () {
-        Route::get('profile', 'profile')->name('api.profile');
-        Route::post('profile/update', 'updateProfile')->name('api.profile.update');
-        Route::post('profile/change-password', 'changePassword')->name('api.profile.change-password');
+        Route::prefix('profile')->group(function () {
+            Route::get('/', 'profile')->name('api.profile');
+            Route::post('update', 'updateProfile')->name('api.profile.update');
+            Route::post('change-password', 'changePassword')->name('api.profile.change-password');
+        });
         Route::get('logout', 'logout')->name('api.logout');
+    });
+
+    Route::controller(UserController::class)->group(function () {
+        Route::prefix('user')->group(function () {
+            Route::post('report','report')->name('api.user.report');
+        });
     });
 
     Route::controller(PublicReportController::class)->group(function () {
@@ -75,9 +85,25 @@ Route::middleware(['api.auth'])->group(function () {
             Route::get('search','search')->name('api.public-report.search');
             Route::get('save/{id}','save')->name('api.public-report.save');
             Route::post('comment','comment')->name('api.public-report.comment');
+            Route::post('report-comment','reportComment')->name('api.public-report.report-comment');
             Route::post('report','report')->name('api.public-report.report');
+
+            Route::get('categories','categories')->name('api.public-report.categories');
         });
         Route::get('user/public-report','userReports')->name('api.user.public-report');
         Route::get('user/public-report/saved','userSavedReports')->name('api.user.public-report.saved');
+    });
+
+    Route::controller(LostReportController::class)->group(function () {
+        Route::prefix('lost-report')->group(function () {
+            Route::get('/','index')->name('api.lost-report');
+            Route::get('read/{id}','show')->name('api.lost-report');
+            Route::post('store','store')->name('api.lost-report.store');
+            Route::post('update/{id}','update')->name('api.lost-report.update');
+            Route::get('delete/{id}','delete')->name('api.lost-report.delete');
+
+            Route::get('report-summary/{id}', 'reportSummary')->name('api.lost-report.summary');
+            Route::get('publication-package', 'publicationPackage')->name('api.lost-report.package');
+        });
     });
 });

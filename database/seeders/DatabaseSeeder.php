@@ -18,6 +18,7 @@ class DatabaseSeeder extends Seeder
             PublicCategorySeeder::class,
             PublicReportSeeder::class,
             ReportTypeSeeder::class,
+            PublicationPackageSeeder::class,
         ]);
     }
 }

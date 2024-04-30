@@ -1,6 +1,5 @@
 <?php
 
-use App\Models\LostCategory;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -12,15 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('lost_reports', function (Blueprint $table) {
+        Schema::create('publication_packages', function (Blueprint $table) {
             $table->id();
-            $table->foreignIdFor(LostCategory::class);
             $table->string('name');
-            $table->string('unique_number')->unique();
-            $table->text('description');
-            $table->date('date');
-            $table->string('village_code');
-            $table->string('location_detail');
+            $table->integer('amount');
+            $table->integer('duration');
+            $table->integer('price');
             $table->timestamps();
         });
     }
@@ -30,6 +26,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('lost_reports');
+        Schema::dropIfExists('publication_packages');
     }
 };

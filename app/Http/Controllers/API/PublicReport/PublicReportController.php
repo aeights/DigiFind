@@ -4,8 +4,10 @@ namespace App\Http\Controllers\API\PublicReport;
 
 use App\Http\Controllers\Controller;
 use App\Models\LostReport;
+use App\Models\PublicCategory;
 use App\Models\PublicComment;
 use App\Models\PublicReport;
+use App\Models\ReportedComment;
 use App\Models\ReportedReport;
 use App\Models\SavedPublicReport;
 use Firebase\JWT\JWT;
@@ -13,8 +15,6 @@ use Firebase\JWT\Key;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
-
-use function Laravel\Prompts\select;
 
 class PublicReportController extends Controller
 {
@@ -282,40 +282,35 @@ class PublicReportController extends Controller
         try {
             $token = $request->bearerToken();
             $decoded = JWT::decode($token, new Key($this->tokenKey, 'HS256'));
-            // $savedId = DB::select("SELECT public_report_id FROM saved_public_reports WHERE user_id = ?",[$decoded->id]);
-            // $reports = PublicReport::whereIn
-            $savedReports = DB::select("SELECT a.*, m.file_name, m.model_id as model_id, m.collection_name FROM saved_public_reports a LEFT OUTER JOIN media m ON a.public_report_id = m.model_id WHERE a.user_id = ".$decoded->id);
-            // $savedReports = DB::table('public_reports as a')
-            //     ->join('saved_public_reports as b', 'a.id', '=', 'b.public_report_id')
-            //     ->where('b.user_id', $decoded->id)
-            //     ->get();
-            // foreach ($savedReports as $key => $value) {
-            //     $value->getMedia('public_report');
-            // }
-                
-            $media = [];
-
+            $savedReports = PublicReport::join('saved_public_reports', 'public_reports.id', '=', 'saved_public_reports.public_report_id')
+                ->where('saved_public_reports.user_id', $decoded->id)
+                ->select('public_reports.*')
+                ->get();
+            // $savedReports = DB::select("SELECT a.* FROM public_reports a JOIN saved_public_reports b ON a.id = b.public_report_id WHERE b.user_id = ?",[$decoded->id]);
             foreach ($savedReports as $value) {
-                if(array_key_exists($value->public_report_id, $media)){
-                    if($value->file_name != null){
-                        array_push($media[$value->public_report_id], $value->file_name);
-                    }
-                }else{
-                    if($value->file_name != null){
-                        $media[$value->public_report_id] = [
-                            $value->file_name,
-                        ];
-                    }else{
-                        $media[$value->public_report_id] = [];
-                    }
-                }
+                $value->getMedia('public_report');
             }
 
+            // $media = [];
+            // foreach ($savedReports as $value) {
+            //     if(array_key_exists($value->public_report_id, $media)){
+            //         if($value->file_name != null){
+            //             array_push($media[$value->public_report_id], $value->file_name);
+            //         }
+            //     }else{
+            //         if($value->file_name != null){
+            //             $media[$value->public_report_id] = [
+            //                 $value->file_name,
+            //             ];
+            //         }else{
+            //             $media[$value->public_report_id] = [];
+            //         }
+            //     }
+            // }
 
             return response()->json([
                 "status" => true,
                 "message" => "Get user saved public report is successful",
-                "media" => $media,
                 "data" => $savedReports,
             ]);
         } catch (ValidationException $ex) {
@@ -375,16 +370,8 @@ class PublicReportController extends Controller
             if ($validated) {
                 $token = $request->bearerToken();
                 $decoded = JWT::decode($token, new Key($this->tokenKey, 'HS256'));
-                $report = null;
+                $report = PublicReport::findOrFail($request->report_id);
 
-                if ($request->report_type_id == 1) {
-                    $public_report = PublicReport::findOrFail($request->report_id);
-                    $report = $public_report;
-                } 
-                if ($request->report_type_id == 2) {
-                    $lost_report = LostReport::findOrFail($request->report_id);
-                    $report = $lost_report;
-                }
                 if ($report) {
                     ReportedReport::create([
                         'user_id' => $decoded->id,
@@ -409,6 +396,66 @@ class PublicReportController extends Controller
                 "message" => "Validation fails",
                 "error" => $ex->errors(),
             ]);
+        } catch (\Exception $ex) {
+            return response()->json([
+                "status" => false,
+                "message" => $ex->getMessage(),
+                "error" => $ex,
+            ]);
+        }
+    }
+
+    public function reportComment(Request $request)
+    {
+        try {
+            $validated = $request->validate([
+                'comment_id' => 'required|exists:public_comments,id',
+                'reason' => 'required'
+            ]);
+            if ($validated) {
+                $token = $request->bearerToken();
+                $decoded = JWT::decode($token, new Key($this->tokenKey, 'HS256'));
+
+                $comment = PublicComment::findOrFail($request->comment_id);
+                if ($comment) {
+                    ReportedComment::create([
+                        'user_id' => $decoded->id,
+                        'comment_id' => $request->comment_id,
+                        'reason' => $request->reason
+                    ]);
+                    return response()->json([
+                        "status" => true,
+                        "message" => "Report comment submitted",
+                        "data" => $comment
+                    ]);
+                }
+            }
+        } catch (ValidationException $ex) {
+            return response()->json([
+                "status" => false,
+                "message" => "Validation fails",
+                "error" => $ex->errors(),
+            ]);
+        } catch (\Exception $ex) {
+            return response()->json([
+                "status" => false,
+                "message" => $ex->getMessage(),
+                "error" => $ex,
+            ]);
+        }
+    }
+
+    public function categories()
+    {
+        try {
+            $data = PublicCategory::all();
+            if ($data) {
+                return response()->json([
+                    "status" => true,
+                    "message" => "Showing all category list",
+                    "data" => $data
+                ]);
+            }
         } catch (\Exception $ex) {
             return response()->json([
                 "status" => false,

@@ -19,7 +19,8 @@ return new class extends Migration
             $table->foreignIdFor(PublicCategory::class);
             $table->string('title');
             $table->timestamp('date');
-            $table->string('location');
+            $table->string('village_code');
+            $table->string('location_detail');
             $table->text('description');
             $table->timestamps();
         });
