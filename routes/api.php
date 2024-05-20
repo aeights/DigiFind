@@ -62,6 +62,7 @@ Route::middleware(['api.auth'])->group(function () {
     Route::controller(ProfileController::class)->group(function () {
         Route::prefix('profile')->group(function () {
             Route::get('/', 'profile')->name('api.profile');
+            Route::post('upload-photo', 'uploadPhoto')->name('api.profile.upload-photo');
             Route::post('update', 'updateProfile')->name('api.profile.update');
             Route::post('change-password', 'changePassword')->name('api.profile.change-password');
         });
@@ -104,6 +105,8 @@ Route::middleware(['api.auth'])->group(function () {
 
             Route::get('report-summary/{id}', 'reportSummary')->name('api.lost-report.summary');
             Route::get('publication-package', 'publicationPackage')->name('api.lost-report.package');
+
+            Route::get('categories','categories')->name('api.lost-report.categories');
         });
     });
 });

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\API\Home;
 
 use App\Http\Controllers\Controller;
+use App\Models\Media;
 use App\Models\RefreshToken;
 use App\Models\Token;
 use App\Models\User;
@@ -11,6 +12,7 @@ use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 
@@ -29,11 +31,12 @@ class ProfileController extends Controller
     {
         $token = $request->bearerToken();
         $decoded = JWT::decode($token, new Key($this->tokenKey, 'HS256'));
-        $user = User::find($decoded->id);
+        // $user = User::find($decoded->id);
+        $user = DB::select("SELECT a.id AS user_id, a.nik, a.name, a.gender, a.address, a.email, a.phone, b.url FROM users a JOIN media b ON a.id = b.model_id");
         return response()->json([
             "status" => true,
             "message" => "Get user profile successfully",
-            "data" => $user,
+            "data" => $user[0],
         ]);
     }
 
@@ -57,6 +60,60 @@ class ProfileController extends Controller
             "status" => false,
             "message" => "Token expired",
         ]);
+    }
+
+    public function uploadPhoto(Request $request)
+    {
+        try {
+            $token = $request->bearerToken();
+            $decoded = JWT::decode($token, new Key($this->tokenKey, 'HS256'));
+            $validated = $request->validate([
+                'media' => 'required|image|mimes:png,jpg,jpeg,webp'
+            ]);
+            
+            if ($validated) {
+                if ($file = $request->file('media')) {
+                    $extension = $file->getClientOriginalExtension();
+                    $fileName = time().'-'.$decoded->id.'.'.$extension;
+                    $path = 'media/profile';
+                    $size = File::size($file);
+                    if ($data = Media::where('model_id',$decoded->id)->first()) {
+                        File::delete($data->url);
+                    }
+                    Media::updateOrCreate(
+                        [
+                            'model_id' => $decoded->id
+                        ],
+                        [
+                            'model_id' => $decoded->id,
+                            'media_type_id' => 2,
+                            'file_name' => $fileName,
+                            'path' => $path,
+                            'url' => $path.'/'.$fileName,
+                            'mime_type' => $extension,
+                            'size' => $size,
+                        ]
+                    );
+                    $file->move($path, $fileName);
+
+                    return response()->json([
+                        "status" => true,
+                        "message" => 'Update profile is successful',
+                    ]);
+                }
+            }
+        } catch (ValidationException $ex) {
+            return response()->json([
+                "status" => false,
+                "message" => "Validation fails",
+                "error" => $ex->errors()
+            ]);
+        } catch (\Exception $ex) {
+            return response()->json([
+                "status" => false,
+                "message" => $ex->getMessage(),
+            ]);
+        }
     }
 
     public function updateProfile(Request $request)

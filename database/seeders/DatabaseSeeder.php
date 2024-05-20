@@ -14,11 +14,14 @@ class DatabaseSeeder extends Seeder
     {
         $this->call([
             AboutTypeSeeder::class,
-            AboutSeeder::class,
+            // AboutSeeder::class,
             PublicCategorySeeder::class,
             PublicReportSeeder::class,
             ReportTypeSeeder::class,
             PublicationPackageSeeder::class,
+            LostCategorySeeder::class,
+            LostReportSeeder::class,
+            MediaTypeSeeder::class,
         ]);
     }
 }

@@ -17,7 +17,14 @@ class LostReportFactory extends Factory
     public function definition(): array
     {
         return [
-            //
+            'user_id' => fake()->numberBetween(1,3),
+            'lost_category_id' => fake()->numberBetween(1,3),
+            'name' => $this->faker->sentence,
+            'unique_number' => fake()->randomElement([null,fake()->randomLetter()]),
+            'description' => $this->faker->paragraph,
+            'date' => $this->faker->dateTimeBetween('-1 year', 'now'),
+            'village_code' => $this->faker->buildingNumber,
+            'location_detail' => $this->faker->address,
         ];
     }
 }

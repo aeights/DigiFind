@@ -35,7 +35,7 @@ class PublicReportController extends Controller
                 'offset' => 'required'
             ]);
             if ($validated) {
-                $reports = PublicReport::orderBy('created_at','desc')->offset($request->offset)->limit($request->limit)->get();
+                $reports = PublicReport::select()->orderBy('created_at','desc')->offset($request->offset)->limit($request->limit)->get();
                 foreach ($reports as $key => $value) {
                     $value->getMedia('public_report');
                 }
@@ -87,7 +87,8 @@ class PublicReportController extends Controller
                 'public_category_id' => 'required|exists:public_categories,id',
                 'title' => 'required',
                 'date' => 'required|date',
-                'location' => 'required',
+                'village_code' => 'required',
+                'location_detail' => 'required',
                 'description' => 'required',
             ]);
             if ($validated) {
@@ -159,17 +160,15 @@ class PublicReportController extends Controller
                 "error" => $ex
             ]);
         }
-
     }
 
     public function delete($id)
     {
         try {
-            $report = PublicReport::findOrFail($id)->delete;
+            $report = PublicReport::findOrFail($id)->delete();
             return response()->json([
                 "status" => true,
                 "message" => "Delete public report is successful",
-                "data" => $report
             ]);
         } catch (\Exception $th) {
             return response()->json([
@@ -290,23 +289,6 @@ class PublicReportController extends Controller
             foreach ($savedReports as $value) {
                 $value->getMedia('public_report');
             }
-
-            // $media = [];
-            // foreach ($savedReports as $value) {
-            //     if(array_key_exists($value->public_report_id, $media)){
-            //         if($value->file_name != null){
-            //             array_push($media[$value->public_report_id], $value->file_name);
-            //         }
-            //     }else{
-            //         if($value->file_name != null){
-            //             $media[$value->public_report_id] = [
-            //                 $value->file_name,
-            //             ];
-            //         }else{
-            //             $media[$value->public_report_id] = [];
-            //         }
-            //     }
-            // }
 
             return response()->json([
                 "status" => true,

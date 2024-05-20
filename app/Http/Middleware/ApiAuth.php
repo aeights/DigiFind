@@ -34,16 +34,14 @@ class ApiAuth
         if ($token) {
             try {
                 $decoded = JWT::decode($token, new Key($this->tokenKey, 'HS256'));
-                if ($decoded) {
-                    $userToken = DB::select('SELECT * FROM tokens WHERE token = ?', [$token]);
-                    if ($userToken and $userToken[0]->expired > Carbon::now()) {
-                        return $next($request);
-                    }
-                    return response()->json([
-                        "status" => false,
-                        "message" => "Token not found or token expired",
-                    ]);
+                $time = Carbon::createFromTimestamp($decoded->exp);
+                if ($decoded and $time > Carbon::now() ) {
+                    return $next($request);
                 }
+                return response()->json([
+                    "status" => false,
+                    "message" => "Token invalid or token expired",
+                ]);
             } catch (ExpiredException $e) {
                 return response()->json([
                     "status" => false,

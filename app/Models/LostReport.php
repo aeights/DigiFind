@@ -10,4 +10,6 @@ use Spatie\MediaLibrary\InteractsWithMedia;
 class LostReport extends Model implements HasMedia
 {
     use HasFactory, InteractsWithMedia;
+
+    protected $guarded = ['id'];
 }
