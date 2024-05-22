@@ -3,8 +3,10 @@
 namespace Database\Seeders;
 
 use App\Models\About;
+use App\Models\Media;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\File;
 
 class AboutSeeder extends Seeder
 {
@@ -37,7 +39,21 @@ class AboutSeeder extends Seeder
         ];
         foreach ($assets as $key => $value) {
             $asset = About::create($value);
-            $asset->addMedia($path[$key])->preservingOriginal()->toMediaCollection('onboarding');
+            // $asset->addMedia($path[$key])->preservingOriginal()->toMediaCollection('onboarding');
+            $mediaPath = 'media/content';
+            $extension = pathinfo($path[$key], PATHINFO_EXTENSION);
+            $fileName = time().'-'.$asset->id.'.'.$extension;
+            $size = File::size($path[$key]);
+            Media::create([
+                'model_id' => $asset->id,
+                'media_type_id' => 1,
+                'file_name' => $fileName,
+                'path' => $mediaPath,
+                'url' => $mediaPath.'/'.$fileName,
+                'mime_type' => $extension,
+                'size' => $size
+            ]);
+            copy($path[$key],public_path().'/'.$mediaPath.'/'.$fileName);
         }
     }
 }

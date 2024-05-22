@@ -29,10 +29,7 @@ class LostReportController extends Controller
                 'offset' => 'required'
             ]);
             if ($validated) {
-                $reports = LostReport::orderBy('created_at','desc')->offset($request->offset)->limit($request->limit)->get();
-                foreach ($reports as $key => $value) {
-                    $value->getMedia('lost_report');
-                }
+                $reports = DB::select("SELECT a.*, GROUP_CONCAT(b.url SEPARATOR ', ') AS url FROM lost_reports a JOIN media b ON a.id = b.model_id WHERE b.media_type_id = 4 GROUP BY a.id LIMIT ? OFFSET ?", [$request->limit, $request->offset]);
                 return response()->json([
                     "status" => true,
                     "message" => "Get list lost report is successful",

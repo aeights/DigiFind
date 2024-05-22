@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\API\PublicReport;
 
 use App\Http\Controllers\Controller;
-use App\Models\LostReport;
 use App\Models\PublicCategory;
 use App\Models\PublicComment;
 use App\Models\PublicReport;
@@ -35,10 +34,11 @@ class PublicReportController extends Controller
                 'offset' => 'required'
             ]);
             if ($validated) {
-                $reports = PublicReport::select()->orderBy('created_at','desc')->offset($request->offset)->limit($request->limit)->get();
-                foreach ($reports as $key => $value) {
-                    $value->getMedia('public_report');
-                }
+                $reports = DB::select("SELECT a.*, GROUP_CONCAT(b.url SEPARATOR ', ') AS url FROM public_reports a JOIN media b ON a.id = b.model_id WHERE b.media_type_id = 3 GROUP BY a.id LIMIT ? OFFSET ?", [$request->limit, $request->offset]);
+                // $reports = PublicReport::select()->orderBy('created_at','desc')->offset($request->offset)->limit($request->limit)->get();
+                // foreach ($reports as $key => $value) {
+                //     $value->getMedia('public_report');
+                // }
                 return response()->json([
                     "status" => true,
                     "message" => "Get list public report is successful",
@@ -63,12 +63,19 @@ class PublicReportController extends Controller
     public function show($id)
     {
         try {
-            $report = PublicReport::findOrFail($id);
-            $report->getMedia('public_report');
+            $report = DB::select("SELECT a.*, GROUP_CONCAT(b.url SEPARATOR ', ') AS url FROM public_reports a JOIN media b ON a.id = b.model_id WHERE b.media_type_id = 3 AND a.id = ? GROUP BY a.id",[$id]);
+            // $report = PublicReport::findOrFail($id);
+            // $report->getMedia('public_report');
+            if (count($report) > 0) {
+                return response()->json([
+                    "status" => true,
+                    "message" => "Get public report is successful",
+                    'data' => $report[0]
+                ]);
+            }
             return response()->json([
-                "status" => true,
-                "message" => "Get public report is successful",
-                'data' => $report
+                "status" => false,
+                "message" => "Public report not found",
             ]);
         } catch (\Exception $th) {
             return response()->json([

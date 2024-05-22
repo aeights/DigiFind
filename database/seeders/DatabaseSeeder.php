@@ -14,7 +14,7 @@ class DatabaseSeeder extends Seeder
     {
         $this->call([
             AboutTypeSeeder::class,
-            // AboutSeeder::class,
+            AboutSeeder::class,
             PublicCategorySeeder::class,
             PublicReportSeeder::class,
             ReportTypeSeeder::class,
@@ -22,6 +22,7 @@ class DatabaseSeeder extends Seeder
             LostCategorySeeder::class,
             LostReportSeeder::class,
             MediaTypeSeeder::class,
+            MediaSeeder::class,
         ]);
     }
 }
