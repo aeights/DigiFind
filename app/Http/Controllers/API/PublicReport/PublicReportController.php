@@ -34,7 +34,8 @@ class PublicReportController extends Controller
                 'offset' => 'required'
             ]);
             if ($validated) {
-                $reports = DB::select("SELECT a.*, GROUP_CONCAT(b.url SEPARATOR ', ') AS url FROM public_reports a JOIN media b ON a.id = b.model_id WHERE b.media_type_id = 3 GROUP BY a.id LIMIT ? OFFSET ?", [$request->limit, $request->offset]);
+                // $reports = DB::select("SELECT a.*, GROUP_CONCAT(b.url SEPARATOR ', ') AS url FROM public_reports a JOIN media b ON a.id = b.model_id WHERE b.media_type_id = 3 GROUP BY a.id LIMIT ? OFFSET ?", [$request->limit, $request->offset]);
+                $reports = DB::select("SELECT a.*, GROUP_CONCAT(b.url SEPARATOR ', ') AS url FROM public_reports a LEFT JOIN media b ON a.id = b.model_id AND b.media_type_id = 3 GROUP BY a.id LIMIT ? OFFSET ?", [$request->limit, $request->offset]);
                 // $reports = PublicReport::select()->orderBy('created_at','desc')->offset($request->offset)->limit($request->limit)->get();
                 // foreach ($reports as $key => $value) {
                 //     $value->getMedia('public_report');
@@ -63,7 +64,8 @@ class PublicReportController extends Controller
     public function show($id)
     {
         try {
-            $report = DB::select("SELECT a.*, GROUP_CONCAT(b.url SEPARATOR ', ') AS url FROM public_reports a JOIN media b ON a.id = b.model_id WHERE b.media_type_id = 3 AND a.id = ? GROUP BY a.id",[$id]);
+            // $report = DB::select("SELECT a.*, GROUP_CONCAT(b.url SEPARATOR ', ') AS url FROM public_reports a JOIN media b ON a.id = b.model_id WHERE b.media_type_id = 3 AND a.id = ? GROUP BY a.id",[$id]);
+            $report = DB::select("SELECT a.*, GROUP_CONCAT(b.url SEPARATOR ', ') AS url FROM public_reports a LEFT JOIN media b ON a.id = b.model_id AND b.media_type_id = 3 WHERE a.id = ? GROUP BY a.id",[$id]);
             // $report = PublicReport::findOrFail($id);
             // $report->getMedia('public_report');
             if (count($report) > 0) {

@@ -17,3 +17,7 @@ yarn-error.log
 /.fleet
 /.idea
 /.vscode
+/public/media/content
+/public/media/profile
+/public/media/public-report
+/public/media/lost-report

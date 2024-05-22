@@ -32,7 +32,7 @@ class ProfileController extends Controller
         $token = $request->bearerToken();
         $decoded = JWT::decode($token, new Key($this->tokenKey, 'HS256'));
         // $user = User::find($decoded->id);
-        $user = DB::select("SELECT a.id AS user_id, a.nik, a.name, a.gender, a.address, a.email, a.phone, b.url FROM users a JOIN media b ON a.id = b.model_id");
+        $user = DB::select("SELECT a.id AS user_id, a.nik, a.name, a.gender, a.address, a.email, a.phone, b.url FROM users a JOIN media b ON a.id = b.model_id WHERE b.media_type_id = 2");
         return response()->json([
             "status" => true,
             "message" => "Get user profile successfully",

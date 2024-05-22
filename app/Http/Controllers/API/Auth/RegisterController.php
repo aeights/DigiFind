@@ -4,7 +4,9 @@ namespace App\Http\Controllers\API\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\RegisterRequest;
+use App\Models\Media;
 use App\Models\User;
+use Illuminate\Support\Facades\File;
 
 class RegisterController extends Controller
 {
@@ -15,6 +17,20 @@ class RegisterController extends Controller
     {
         $this->tokenKey = config('services.jwt.token_key');
         $this->refreshTokenKey = config('services.jwt.refresh_token_key');
+    }
+
+    public function getRandomAvatar($gender)
+    {
+        $avatarsPath = '';
+        if ($gender == 'male') {
+            $avatarsPath = public_path('media/avatar/male');
+        }
+        if ($gender == 'female') {
+            $avatarsPath = public_path('media/avatar/female');
+        }
+        $files = glob($avatarsPath . '/*.{jpg,png,gif}', GLOB_BRACE);
+        $file = array_rand(array_flip($files));
+        return $file;
     }
 
     public function register(RegisterRequest $registerRequest)
@@ -31,7 +47,27 @@ class RegisterController extends Controller
                     'password' => $registerRequest->password,
                     'phone' => $registerRequest->phone,
                 ]);
-    
+
+                $avatar = self::getRandomAvatar($registerRequest->gender);
+                $extension = pathinfo($avatar, PATHINFO_EXTENSION);
+                $fileName = time().'-'.$user->id.'.'.$extension;
+                $path = 'media/profile';
+                $size = File::size($avatar);
+                Media::updateOrCreate(
+                    [
+                        'model_id' => $user->id
+                    ],
+                    [
+                        'model_id' => $user->id,
+                        'media_type_id' => 2,
+                        'file_name' => $fileName,
+                        'path' => $path,
+                        'url' => $path.'/'.$fileName,
+                        'mime_type' => $extension,
+                        'size' => $size,
+                    ]
+                );
+                copy($avatar,public_path().'/'.$path.'/'.$fileName);
                 return response()->json([
                     "status" => true,
                     "message" => "User registration is successful"
