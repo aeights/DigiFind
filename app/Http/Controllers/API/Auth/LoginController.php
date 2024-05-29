@@ -119,12 +119,12 @@ class LoginController extends Controller
                         $newToken = JWT::encode($payloadToken, $this->tokenKey, 'HS256');
                         $newRefreshToken = JWT::encode($payloadRefreshToken, $this->refreshTokenKey, 'HS256');
                         
-                        $userToken = Token::where('user_id',$decoded->id)->update(
-                            [
-                                'token' => $newToken,
-                                'expired' => Carbon::now()->addDay()
-                            ]
-                        );
+                        // $userToken = Token::where('user_id',$decoded->id)->update(
+                        //     [
+                        //         'token' => $newToken,
+                        //         'expired' => Carbon::now()->addDay()
+                        //     ]
+                        // );
                         
                         $userRefreshToken = RefreshToken::where('user_id',$decoded->id)->update(
                             [

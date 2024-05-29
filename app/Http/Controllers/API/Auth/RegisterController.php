@@ -55,7 +55,8 @@ class RegisterController extends Controller
                 $size = File::size($avatar);
                 Media::updateOrCreate(
                     [
-                        'model_id' => $user->id
+                        'model_id' => $user->id,
+                        'media_type_id' => 2
                     ],
                     [
                         'model_id' => $user->id,

@@ -45,11 +45,9 @@ class ProfileController extends Controller
         $token = $request->bearerToken();
         $decoded = JWT::decode($token, new Key($this->tokenKey, 'HS256'));
 
-        $userToken = Token::where('token',$token)->first();
         $userRefreshToken = RefreshToken::where('user_id',$decoded->id)->first();
         
-        if ($userToken and $userToken->expired > Carbon::now()) {
-            $userToken->delete();
+        if ($userRefreshToken) {
             $userRefreshToken->delete();
             return response()->json([
                 "status" => true,
@@ -77,7 +75,7 @@ class ProfileController extends Controller
                     $fileName = time().'-'.$decoded->id.'.'.$extension;
                     $path = 'media/profile';
                     $size = File::size($file);
-                    if ($data = Media::where('model_id',$decoded->id)->first()) {
+                    if ($data = Media::where('model_id',$decoded->id)->where('media_type_id',2)->first()) {
                         File::delete($data->url);
                     }
                     Media::updateOrCreate(

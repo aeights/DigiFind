@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\API\PublicReport;
 
 use App\Http\Controllers\Controller;
+use App\Models\Media;
 use App\Models\PublicCategory;
 use App\Models\PublicComment;
 use App\Models\PublicReport;
@@ -13,6 +14,7 @@ use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\File;
 use Illuminate\Validation\ValidationException;
 
 class PublicReportController extends Controller
@@ -35,11 +37,11 @@ class PublicReportController extends Controller
             ]);
             if ($validated) {
                 // $reports = DB::select("SELECT a.*, GROUP_CONCAT(b.url SEPARATOR ', ') AS url FROM public_reports a JOIN media b ON a.id = b.model_id WHERE b.media_type_id = 3 GROUP BY a.id LIMIT ? OFFSET ?", [$request->limit, $request->offset]);
-                $reports = DB::select("SELECT a.*, GROUP_CONCAT(b.url SEPARATOR ', ') AS url FROM public_reports a LEFT JOIN media b ON a.id = b.model_id AND b.media_type_id = 3 GROUP BY a.id LIMIT ? OFFSET ?", [$request->limit, $request->offset]);
                 // $reports = PublicReport::select()->orderBy('created_at','desc')->offset($request->offset)->limit($request->limit)->get();
                 // foreach ($reports as $key => $value) {
                 //     $value->getMedia('public_report');
                 // }
+                $reports = DB::select("SELECT a.*, GROUP_CONCAT(b.url SEPARATOR ', ') AS url FROM public_reports a LEFT JOIN media b ON a.id = b.model_id AND b.media_type_id = 3 GROUP BY a.id LIMIT ? OFFSET ?", [$request->limit, $request->offset]);
                 return response()->json([
                     "status" => true,
                     "message" => "Get list public report is successful",
@@ -65,9 +67,10 @@ class PublicReportController extends Controller
     {
         try {
             // $report = DB::select("SELECT a.*, GROUP_CONCAT(b.url SEPARATOR ', ') AS url FROM public_reports a JOIN media b ON a.id = b.model_id WHERE b.media_type_id = 3 AND a.id = ? GROUP BY a.id",[$id]);
-            $report = DB::select("SELECT a.*, GROUP_CONCAT(b.url SEPARATOR ', ') AS url FROM public_reports a LEFT JOIN media b ON a.id = b.model_id AND b.media_type_id = 3 WHERE a.id = ? GROUP BY a.id",[$id]);
             // $report = PublicReport::findOrFail($id);
             // $report->getMedia('public_report');
+
+            $report = DB::select("SELECT a.*, GROUP_CONCAT(b.url SEPARATOR ', ') AS url FROM public_reports a LEFT JOIN media b ON a.id = b.model_id AND b.media_type_id = 3 WHERE a.id = ? GROUP BY a.id",[$id]);
             if (count($report) > 0) {
                 return response()->json([
                     "status" => true,
@@ -103,9 +106,31 @@ class PublicReportController extends Controller
             if ($validated) {
                 DB::beginTransaction();
                 $publicReport = PublicReport::create($validated);
+                // if ($request->hasFile('media')) {
+                //     foreach ($request->file('media') as $key => $value) {
+                //         $publicReport->addMedia($value)->toMediaCollection('public_report');
+                //     }
+                // }
+
                 if ($request->hasFile('media')) {
-                    foreach ($request->file('media') as $key => $value) {
-                        $publicReport->addMedia($value)->toMediaCollection('public_report');
+                    $file = $request->file('media');
+                    foreach ($file as $key => $value) {
+                        $extension = $value->getClientOriginalExtension();
+                        $fileName = time().'-'.$publicReport->id.'-'.$key.'.'.$extension;
+                        $path = 'media/public-report';
+                        $size = File::size($value);
+                        Media::create(
+                            [
+                                'model_id' => $publicReport->id,
+                                'media_type_id' => 3,
+                                'file_name' => $fileName,
+                                'path' => $path,
+                                'url' => $path.'/'.$fileName,
+                                'mime_type' => $extension,
+                                'size' => $size,
+                            ]
+                        );
+                        $value->move($path, $fileName);
                     }
                 }
                 DB::commit();
@@ -138,15 +163,18 @@ class PublicReportController extends Controller
     {
         try {
             $validated = $request->validate([
-                'user_id' => 'required|exists:users,id',
-                'public_category_id' => 'required|exists:public_categories,id',
-                'title' => 'required',
-                'date' => 'required|date',
-                'location' => 'required',
-                'description' => 'required',
+                'user_id' => 'exists:users,id',
+                'public_category_id' => 'exists:public_categories,id',
+                // 'title' => 'required',
+                // 'date' => 'required|date',
+                // 'village_code' => 'required',
+                // 'location_detail' => 'required',
+                // 'description' => 'required',
             ]);
             if ($validated) {
-                $publicReport = PublicReport::findOrFail($id)->update($validated);
+                DB::beginTransaction();
+                $publicReport = PublicReport::findOrFail($id)->update($request->all());
+                DB::commit();
                 return response()->json([
                     "status" => true,
                     "message" => 'Update public report is successful',
@@ -163,6 +191,7 @@ class PublicReportController extends Controller
                 "error" => $ex->errors(),
             ]);
         } catch (\Exception $ex) {
+            DB::rollBack();
             return response()->json([
                 "status" => false,
                 "message" => $ex->getMessage(),
@@ -174,12 +203,27 @@ class PublicReportController extends Controller
     public function delete($id)
     {
         try {
+            DB::beginTransaction();
             $report = PublicReport::findOrFail($id)->delete();
+            $media = Media::where('model_id',$id)->where('media_type_id',3);
+
+            if (count($media->get()) > 0) {
+                foreach ($media->get() as $key => $value) {
+                    $file = public_path($value->url);
+                    if (file_exists($file)) {
+                        File::delete($value->url);
+                    }
+                }
+            }
+            $media->delete();
+
+            DB::commit();
             return response()->json([
                 "status" => true,
                 "message" => "Delete public report is successful",
             ]);
         } catch (\Exception $th) {
+            DB::rollBack();
             return response()->json([
                 "status" => false,
                 "message" => $th->getMessage(),
@@ -230,10 +274,11 @@ class PublicReportController extends Controller
                 'keyword' => 'required'
             ]);
             if ($validated) {
-                $reports = PublicReport::where('title','like',"%$request->keyword%")->get();
-                foreach ($reports as $key => $value) {
-                    $value->getMedia('public_report');
-                }
+                // $reports = PublicReport::where('title','like',"%$request->keyword%")->get();
+                // foreach ($reports as $key => $value) {
+                //     $value->getMedia('public_report');
+                // }
+                $reports = DB::select("SELECT a.*, GROUP_CONCAT(b.url SEPARATOR ', ') AS url FROM public_reports a LEFT JOIN media b ON a.id = b.model_id AND b.media_type_id = 3 WHERE a.title LIKE ? GROUP BY a.id",["%".$request->keyword."%"]);
                 return response()->json([
                     "status" => true,
                     "message" => "Search public report is successful",
