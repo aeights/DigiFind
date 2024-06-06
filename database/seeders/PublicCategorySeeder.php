@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\PublicCategory;
+use App\Models\PublicSubCategory;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Str;
@@ -14,25 +15,32 @@ class PublicCategorySeeder extends Seeder
      */
     public function run(): void
     {
-        $topics = [
-            ['name' => 'Lalu lintas', 'slug' => Str::slug('Lalu lintas')],
-            ['name' => 'Transportasi umum', 'slug' => Str::slug('Transportasi umum')],
-            ['name' => 'Polusi udara', 'slug' => Str::slug('Polusi udara')],
-            ['name' => 'Kesehatan', 'slug' => Str::slug('Kesehatan')],
-            ['name' => 'Layanan kesehatan', 'slug' => Str::slug('Layanan kesehatan')],
-            ['name' => 'Pendidikan', 'slug' => Str::slug('Pendidikan')],
-            ['name' => 'Perubahan iklim', 'slug' => Str::slug('Perubahan iklim')],
-            ['name' => 'Pencemaran air, tanah, dan udara', 'slug' => Str::slug('Pencemaran air, tanah, dan udara')],
-            ['name' => 'Kerusakan hutan', 'slug' => Str::slug('Kerusakan hutan')],
-            ['name' => 'Layanan publik', 'slug' => Str::slug('Layanan publik')],
-            ['name' => 'Pekerjaan', 'slug' => Str::slug('Pekerjaan')],
-            ['name' => 'Privasi data', 'slug' => Str::slug('Privasi data')],
-            ['name' => 'Tindakan kriminal', 'slug' => Str::slug('Tindakan kriminal')],
-            ['name' => 'Pembangunan inklusif', 'slug' => Str::slug('Pembangunan inklusif')],
+        $data = [
+            'Lalu Lintas' => ['lampu lalu lintas', 'jalan raya'],
+            'Transportasi Umum' => ['Pelayanan', 'Tarif', 'Keamanan'],
+            'Polusi Udara' => ['limbah pabrik', 'polusi lalu lintas'],
+            'Kesehatan' => ['Penyakit Menular', 'Kesehatan Mental', 'Gizi dan Nutrisi', 'Rumah Sakit', 'Pelayanan', 'Kebersihan', 'Rumah Sakit dan Klinik', 'Tenaga Medis', 'Fasilitas', 'Aksesibilitas', 'Asuransi Kesehatan'],
+            'Pendidikan' => ['Kurikulum dan Pembelajaran', 'Fasilitas Pendidikan', 'Kualitas Pengajaran', 'Akses Pendidikan', 'Inovasi'],
+            'Perubahan Iklim' => ['Mitigasi dan Adaptasi', 'Kebijakan Iklim', 'Edukasi'],
+            'Pencemaran Air, Tanah, dan Udara' => ['sungai', 'danau', 'sumur', 'lahan pertanian', 'Kebun', 'Taman', 'Hutan'],
+            'Kerusakan Hutan' => ['kebakaran liar', 'penebangan liar'],
+            'Layanan Publik' => ['Layanan Administratif', 'Infrastruktur Publik', 'Pelayanan Sosial', 'Pelayanan Darurat', 'Transparansi', 'Listrik'],
+            'Pekerjaan' => ['Gaji', 'Asuransi kerja'],
+            'Privasi Data' => ['Perlindungan Data Pribadi', 'Kebijakan Privasi', 'Keamanan Data'],
+            'Tindakan Kriminal' => ['Kejahatan Jalanan', 'Kejahatan Siber', 'Penegakan Hukum', 'Rehabilitasi'],
+            'Pembangunan Inklusif' => ['Pembangunan Berkelanjutan', 'Kesetaraan Gender', 'Inklusi Sosial', 'Aksesibilitas Infrastruktur', 'Keterlibatan Komunitas'],
         ];
 
-        foreach ($topics as $key => $value) {
-            PublicCategory::create($value);
+        foreach ($data as $category => $subcategories) {
+            $categoryModel = PublicCategory::create(['name' => $category , 'slug' => Str::slug($category)]);
+
+            foreach ($subcategories as $subcategory) {
+                PublicSubCategory::create([
+                    'public_category_id' => $categoryModel->id,
+                    'name' => $subcategory,
+                    'slug' => Str::slug($subcategory)
+                ]);
+            }
         }
     }
 }
