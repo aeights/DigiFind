@@ -19,8 +19,8 @@ class PublicReportFactory extends Factory
         $villages = ['11.01.02.2009','11.02.09.2012','11.03.10.2021','11.03.13.2007'];
         
         return [
-            'user_id' => fake()->numberBetween(1,3),
-            'public_category_id' => fake()->numberBetween(1,3),
+            'user_id' => fake()->numberBetween(1,10),
+            'public_sub_category_id' => fake()->numberBetween(1,20),
             'title' => $this->faker->sentence,
             'date' => $this->faker->dateTimeBetween('-1 year', 'now'),
             'village_code' => fake()->randomElement($villages),

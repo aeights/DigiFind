@@ -41,21 +41,23 @@ class PublicReportController extends Controller
                 // foreach ($reports as $key => $value) {
                 //     $value->getMedia('public_report');
                 // }
-                $reports = DB::select("SELECT a.*, 
+                $reports = DB::select("SELECT a.*, g.name AS category,
                     GROUP_CONCAT(b.url SEPARATOR ', ') AS url, 
-                    CONCAT(d.name, ', ', c.name, ', ', b2.name, ', ', a2.name) AS address
+                    CONCAT(d.name, ', ', c.name, ', ', e.name, ', ', f.name) AS address
                 FROM 
                     public_reports a 
                 LEFT JOIN 
                     media b ON a.id = b.model_id AND b.media_type_id = 3 
+                JOIN
+                    public_sub_categories g ON a.public_sub_category_id = g.id	
                 JOIN 
                     villages d ON a.village_code = d.village_code
                 JOIN 
                     districts c ON d.district_code = c.district_code
                 JOIN 
-                    cities b2 ON c.city_code = b2.city_code
+                    cities e ON c.city_code = e.city_code
                 JOIN 
-                    provinces a2 ON b2.province_code = a2.province_code
+                    provinces f ON e.province_code = f.province_code
                 GROUP BY 
                     a.id LIMIT ? OFFSET ?", [$request->limit, $request->offset]);
                 return response()->json([
@@ -88,24 +90,25 @@ class PublicReportController extends Controller
 
             // $report = DB::select("SELECT a.*, GROUP_CONCAT(b.url SEPARATOR ', ') AS url FROM public_reports a LEFT JOIN media b ON a.id = b.model_id AND b.media_type_id = 3 WHERE a.id = ? GROUP BY a.id",[$id]);
             
-            $report = DB::select("SELECT a.*, 
+            $report = DB::select("SELECT a.*, g.name AS category,
                     GROUP_CONCAT(b.url SEPARATOR ', ') AS url, 
-                    CONCAT(d.name, ', ', c.name, ', ', b2.name, ', ', a2.name) AS address
+                    CONCAT(d.name, ', ', c.name, ', ', e.name, ', ', f.name) AS address
                 FROM 
                     public_reports a 
                 LEFT JOIN 
                     media b ON a.id = b.model_id AND b.media_type_id = 3 
+                JOIN
+                    public_sub_categories g ON a.public_sub_category_id = g.id	
                 JOIN 
                     villages d ON a.village_code = d.village_code
                 JOIN 
                     districts c ON d.district_code = c.district_code
                 JOIN 
-                    cities b2 ON c.city_code = b2.city_code
+                    cities e ON c.city_code = e.city_code
                 JOIN 
-                    provinces a2 ON b2.province_code = a2.province_code
+                    provinces f ON e.province_code = f.province_code
                 WHERE a.id = ?
-                GROUP BY 
-                    a.id", [$id]);
+                GROUP BY a.id", [$id]);
             if (count($report) > 0) {
                 return response()->json([
                     "status" => true,
@@ -277,10 +280,30 @@ class PublicReportController extends Controller
             if ($validated) {
                 $token = $request->bearerToken();
                 $decoded = JWT::decode($token, new Key($this->tokenKey, 'HS256'));
-                $reports = PublicReport::where('user_id',$decoded->id)->orderBy('created_at','desc')->offset($request->offset)->limit($request->limit)->get();
-                foreach ($reports as $key => $value) {
-                    $value->getMedia('public_report');
-                }
+                // $reports = PublicReport::where('user_id',$decoded->id)->orderBy('created_at','desc')->offset($request->offset)->limit($request->limit)->get();
+                // foreach ($reports as $key => $value) {
+                //     $value->getMedia('public_report');
+                // }
+
+                $reports = DB::select("SELECT a.*, g.name AS category,
+                    GROUP_CONCAT(b.url SEPARATOR ', ') AS url, 
+                    CONCAT(d.name, ', ', c.name, ', ', e.name, ', ', f.name) AS address
+                FROM 
+                    public_reports a 
+                LEFT JOIN 
+                    media b ON a.id = b.model_id AND b.media_type_id = 3 
+                JOIN
+                    public_sub_categories g ON a.public_sub_category_id = g.id	
+                JOIN 
+                    villages d ON a.village_code = d.village_code
+                JOIN 
+                    districts c ON d.district_code = c.district_code
+                JOIN 
+                    cities e ON c.city_code = e.city_code
+                JOIN 
+                    provinces f ON e.province_code = f.province_code
+                WHERE a.user_id = ?
+                GROUP BY a.id", [$decoded->id]);
                 return response()->json([
                     "status" => true,
                     "message" => "Get user public report is successful",
