@@ -134,7 +134,7 @@ class PublicReportController extends Controller
         try {
             $validated = $request->validate([
                 'user_id' => 'required|exists:users,id',
-                'public_category_id' => 'required|exists:public_categories,id',
+                'public_sub_category_id' => 'required|exists:public_sub_categories,id',
                 'title' => 'required',
                 'date' => 'required|date',
                 'village_code' => 'required',
@@ -202,7 +202,7 @@ class PublicReportController extends Controller
         try {
             $validated = $request->validate([
                 'user_id' => 'exists:users,id',
-                'public_category_id' => 'exists:public_categories,id',
+                'public_sub_category_id' => 'exists:public_sub_categories,id',
                 // 'title' => 'required',
                 // 'date' => 'required|date',
                 // 'village_code' => 'required',
@@ -583,7 +583,18 @@ class PublicReportController extends Controller
     public function categories()
     {
         try {
-            $data = PublicCategory::all();
+            // $data = PublicCategory::all();
+            $data = DB::select("SELECT 
+                a.id AS category_id, 
+                a.name AS category_name, 
+                GROUP_CONCAT(b.id SEPARATOR ', ') AS sub_category_id,
+                GROUP_CONCAT(b.name SEPARATOR ', ') AS sub_category_names
+            FROM public_categories a 
+            LEFT JOIN 
+                public_sub_categories b 
+            ON 
+                a.id = b.public_category_id 
+            GROUP BY a.id, a.name");
             if ($data) {
                 return response()->json([
                     "status" => true,
