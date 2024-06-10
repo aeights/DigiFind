@@ -337,21 +337,23 @@ class PublicReportController extends Controller
                 //     $value->getMedia('public_report');
                 // }
                 // $reports = DB::select("SELECT a.*, GROUP_CONCAT(b.url SEPARATOR ', ') AS url FROM public_reports a LEFT JOIN media b ON a.id = b.model_id AND b.media_type_id = 3 WHERE a.title LIKE ? GROUP BY a.id",["%".$request->keyword."%"]);
-                $reports = DB::select("SELECT a.*, 
+                $reports = DB::select("SELECT a.*, g.name AS category,
                     GROUP_CONCAT(b.url SEPARATOR ', ') AS url, 
-                    CONCAT(d.name, ', ', c.name, ', ', b2.name, ', ', a2.name) AS address
+                    CONCAT(d.name, ', ', c.name, ', ', e.name, ', ', f.name) AS address
                 FROM 
                     public_reports a 
                 LEFT JOIN 
                     media b ON a.id = b.model_id AND b.media_type_id = 3 
+                JOIN
+                    public_sub_categories g ON a.public_sub_category_id = g.id	
                 JOIN 
                     villages d ON a.village_code = d.village_code
                 JOIN 
                     districts c ON d.district_code = c.district_code
                 JOIN 
-                    cities b2 ON c.city_code = b2.city_code
+                    cities e ON c.city_code = e.city_code
                 JOIN 
-                    provinces a2 ON b2.province_code = a2.province_code
+                    provinces f ON e.province_code = f.province_code
                 WHERE a.title LIKE ?
                 GROUP BY a.id",["%".$request->keyword."%"]);
                 return response()->json([
@@ -410,14 +412,36 @@ class PublicReportController extends Controller
         try {
             $token = $request->bearerToken();
             $decoded = JWT::decode($token, new Key($this->tokenKey, 'HS256'));
-            $savedReports = PublicReport::join('saved_public_reports', 'public_reports.id', '=', 'saved_public_reports.public_report_id')
-                ->where('saved_public_reports.user_id', $decoded->id)
-                ->select('public_reports.*')
-                ->get();
+            // $savedReports = PublicReport::join('saved_public_reports', 'public_reports.id', '=', 'saved_public_reports.public_report_id')
+            //     ->where('saved_public_reports.user_id', $decoded->id)
+            //     ->select('public_reports.*')
+            //     ->get();
             // $savedReports = DB::select("SELECT a.* FROM public_reports a JOIN saved_public_reports b ON a.id = b.public_report_id WHERE b.user_id = ?",[$decoded->id]);
-            foreach ($savedReports as $value) {
-                $value->getMedia('public_report');
-            }
+            // foreach ($savedReports as $value) {
+            //     $value->getMedia('public_report');
+            // }
+
+            $savedReports = DB::select("SELECT a.*, g.name AS category,
+                    GROUP_CONCAT(b.url SEPARATOR ', ') AS url, 
+                    CONCAT(d.name, ', ', c.name, ', ', e.name, ', ', f.name) AS address
+                FROM 
+                    public_reports a 
+                LEFT JOIN 
+                    media b ON a.id = b.model_id AND b.media_type_id = 3 
+                JOIN
+                    public_sub_categories g ON a.public_sub_category_id = g.id	
+                JOIN 
+                    villages d ON a.village_code = d.village_code
+                JOIN 
+                    districts c ON d.district_code = c.district_code
+                JOIN 
+                    cities e ON c.city_code = e.city_code
+                JOIN 
+                    provinces f ON e.province_code = f.province_code
+                JOIN 
+                    saved_public_reports h ON a.id = h.public_report_id
+                WHERE h.user_id = ?
+                GROUP BY a.id",[$decoded->id]);
 
             return response()->json([
                 "status" => true,

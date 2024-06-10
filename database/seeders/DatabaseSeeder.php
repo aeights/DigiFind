@@ -23,6 +23,8 @@ class DatabaseSeeder extends Seeder
             LostReportSeeder::class,
             MediaTypeSeeder::class,
             MediaSeeder::class,
+            TransactionStatusSeeder::class,
+            LocationSeeder::class
         ]);
     }
 }
