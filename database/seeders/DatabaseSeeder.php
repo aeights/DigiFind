@@ -18,6 +18,7 @@ class DatabaseSeeder extends Seeder
             AboutSeeder::class,
             PublicCategorySeeder::class,
             PublicReportSeeder::class,
+            PublicCommentSeeder::class,
             ReportTypeSeeder::class,
             PublicationPackageSeeder::class,
             LostCategorySeeder::class,

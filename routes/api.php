@@ -86,6 +86,7 @@ Route::middleware(['api.auth'])->group(function () {
             Route::get('search','search')->name('api.public-report.search');
             Route::get('save/{id}','save')->name('api.public-report.save');
             Route::post('comment','comment')->name('api.public-report.comment');
+            Route::get('comments/{id}','getComments')->name('api.public-report.comments');
             Route::post('report-comment','reportComment')->name('api.public-report.report-comment');
             Route::post('report','report')->name('api.public-report.report');
 

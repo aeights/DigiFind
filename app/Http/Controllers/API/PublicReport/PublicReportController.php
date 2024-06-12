@@ -67,13 +67,14 @@ class PublicReportController extends Controller
                 LEFT JOIN
                     provinces f ON e.province_code = f.province_code
                 GROUP BY
-                    a.id, d.name, c.name, e.name, f.name, g.name, h.id, g.id
+                    a.id, g.name, h.url, i.name
                 LIMIT ? OFFSET ?", [$request->limit, $request->offset]);
                 return response()->json([
                     "status" => true,
                     "message" => "Get list public report is successful",
                     'data' => $reports
                 ]);
+                // a.id, g.name, h.url, i.name
             }
         } catch (ValidationException $ex) {
             return response()->json([
@@ -126,7 +127,7 @@ class PublicReportController extends Controller
                     provinces f ON e.province_code = f.province_code
                 WHERE a.id = ?
                 GROUP BY
-                    a.id, d.name, c.name, e.name, f.name, g.name, h.id, g.id", [$id]);
+                    a.id, g.name, h.url, i.name", [$id]);
             if (count($report) > 0) {
                 return response()->json([
                     "status" => true,
@@ -330,7 +331,7 @@ class PublicReportController extends Controller
                     provinces f ON e.province_code = f.province_code
                 WHERE a.user_id = ?
                 GROUP BY
-                    a.id, d.name, c.name, e.name, f.name, g.name, h.id, g.id", [$decoded->id]);
+                    a.id, g.name, h.url, i.name", [$decoded->id]);
                 return response()->json([
                     "status" => true,
                     "message" => "Get user public report is successful",
@@ -391,7 +392,7 @@ class PublicReportController extends Controller
                     provinces f ON e.province_code = f.province_code
                 WHERE a.title LIKE ?
                 GROUP BY
-                    a.id, d.name, c.name, e.name, f.name, g.name, h.id, g.id",["%".$request->keyword."%"]);
+                    a.id, g.name, h.url, i.name",["%".$request->keyword."%"]);
                 return response()->json([
                     "status" => true,
                     "message" => "Search public report is successful",
@@ -486,7 +487,7 @@ class PublicReportController extends Controller
                     saved_public_reports j ON a.id = j.public_report_id
                 WHERE j.user_id = ?
                 GROUP BY
-                    a.id, d.name, c.name, e.name, f.name, g.name, h.id, g.id",[$decoded->id]);
+                    a.id, g.name, h.url, i.name",[$decoded->id]);
 
             return response()->json([
                 "status" => true,
@@ -647,6 +648,52 @@ class PublicReportController extends Controller
                     "data" => $data
                 ]);
             }
+        } catch (\Exception $ex) {
+            return response()->json([
+                "status" => false,
+                "message" => $ex->getMessage(),
+                "error" => $ex,
+            ]);
+        }
+    }
+
+    public function getComments($id)
+    {
+        try {
+            $data = DB::select("SELECT b.id AS user_id, b.name, c.url, a.id AS comment_id, a.body
+                FROM public_comments a 
+                LEFT JOIN users b ON a.user_id = b.id
+                LEFT JOIN media c ON b.id = c.model_id AND c.media_type_id = 2
+                LEFT JOIN public_reports d ON a.public_report_id = d.id
+                WHERE d.id = ?",[$id]);
+            return response()->json([
+                "status" => true,
+                "message" => "Showing all comment",
+                "data" => $data
+            ]);
+        } catch (\Exception $ex) {
+            return response()->json([
+                "status" => false,
+                "message" => $ex->getMessage(),
+                "error" => $ex,
+            ]);
+        }
+    }
+
+    public function relatedReport($id)
+    {
+        try {
+            $data = DB::select("SELECT b.id AS user_id, b.name, c.url, a.id AS comment_id, a.body
+                FROM public_comments a 
+                LEFT JOIN users b ON a.user_id = b.id
+                LEFT JOIN media c ON b.id = c.model_id AND c.media_type_id = 2
+                LEFT JOIN public_reports d ON a.public_report_id = d.id
+                WHERE d.id = ?",[$id]);
+            return response()->json([
+                "status" => true,
+                "message" => "Showing all related report",
+                "data" => $data
+            ]);
         } catch (\Exception $ex) {
             return response()->json([
                 "status" => false,
