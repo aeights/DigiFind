@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\PublicCategory;
 use App\Models\PublicSubCategory;
 use App\Models\User;
 use Illuminate\Database\Migrations\Migration;
@@ -16,6 +17,7 @@ return new class extends Migration
         Schema::create('public_reports', function (Blueprint $table) {
             $table->id();
             $table->foreignIdFor(User::class);
+            $table->foreignIdFor(PublicCategory::class);
             $table->foreignIdFor(PublicSubCategory::class);
             $table->string('title');
             $table->timestamp('date');

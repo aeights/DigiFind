@@ -153,6 +153,7 @@ class PublicReportController extends Controller
         try {
             $validated = $request->validate([
                 'user_id' => 'required|exists:users,id',
+                'public_category_id' => 'required|exists:public_categories,id',
                 'public_sub_category_id' => 'required|exists:public_sub_categories,id',
                 'title' => 'required',
                 'date' => 'required|date',
@@ -221,6 +222,7 @@ class PublicReportController extends Controller
         try {
             $validated = $request->validate([
                 'user_id' => 'exists:users,id',
+                'public_category_id' => 'exists:public_categories,id',
                 'public_sub_category_id' => 'exists:public_sub_categories,id',
                 // 'title' => 'required',
                 // 'date' => 'required|date',
@@ -660,12 +662,13 @@ class PublicReportController extends Controller
     public function getComments($id)
     {
         try {
-            $data = DB::select("SELECT b.id AS user_id, b.name, c.url, a.id AS comment_id, a.body
+            $data = DB::select("SELECT b.id AS user_id, b.name, c.url, a.id AS comment_id, a.body, a.created_at
                 FROM public_comments a 
                 LEFT JOIN users b ON a.user_id = b.id
                 LEFT JOIN media c ON b.id = c.model_id AND c.media_type_id = 2
                 LEFT JOIN public_reports d ON a.public_report_id = d.id
-                WHERE d.id = ?",[$id]);
+                WHERE d.id = ?
+                ORDER BY a.created_at desc",[$id]);
             return response()->json([
                 "status" => true,
                 "message" => "Showing all comment",
@@ -683,16 +686,38 @@ class PublicReportController extends Controller
     public function relatedReport($id)
     {
         try {
-            $data = DB::select("SELECT b.id AS user_id, b.name, c.url, a.id AS comment_id, a.body
-                FROM public_comments a 
-                LEFT JOIN users b ON a.user_id = b.id
-                LEFT JOIN media c ON b.id = c.model_id AND c.media_type_id = 2
-                LEFT JOIN public_reports d ON a.public_report_id = d.id
-                WHERE d.id = ?",[$id]);
+            $reports = DB::select("SELECT 
+                    a.*,
+                    i.name,
+                    h.url AS user_url,
+                    g.name AS category,
+                    GROUP_CONCAT(b.url SEPARATOR ', ') AS url,
+                    CONCAT(d.name, ', ', c.name, ', ', e.name, ', ', f.name) AS address
+                FROM
+                    public_reports a
+                LEFT JOIN
+                    media b ON a.id = b.model_id AND b.media_type_id = 3
+                LEFT JOIN
+                    media h ON a.user_id = h.model_id AND h.media_type_id = 2
+                LEFT JOIN
+                    users i ON a.user_id = i.id
+                LEFT JOIN
+                    public_sub_categories g ON a.public_sub_category_id = g.id
+                LEFT JOIN
+                    villages d ON a.village_code = d.village_code
+                LEFT JOIN
+                    districts c ON d.district_code = c.district_code
+                LEFT JOIN
+                    cities e ON c.city_code = e.city_code
+                LEFT JOIN
+                    provinces f ON e.province_code = f.province_code
+                WHERE a.public_category_id = ?
+                GROUP BY
+                    a.id, g.name, h.url, i.name",[$id]);
             return response()->json([
                 "status" => true,
-                "message" => "Showing all related report",
-                "data" => $data
+                "message" => "Get related reports successfully",
+                "data" => $reports
             ]);
         } catch (\Exception $ex) {
             return response()->json([

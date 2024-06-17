@@ -7,6 +7,7 @@ use App\Http\Controllers\API\Content\AboutUsController;
 use App\Http\Controllers\API\Content\ContactUsController;
 use App\Http\Controllers\API\Content\OnboardingController;
 use App\Http\Controllers\API\Home\ProfileController;
+use App\Http\Controllers\API\Location\LocationController;
 use App\Http\Controllers\API\LostReport\LostReportController;
 use App\Http\Controllers\API\PublicReport\PublicReportController;
 use App\Http\Controllers\API\User\UserController;
@@ -91,6 +92,7 @@ Route::middleware(['api.auth'])->group(function () {
             Route::post('report','report')->name('api.public-report.report');
 
             Route::get('categories','categories')->name('api.public-report.categories');
+            Route::get('related-report/{id}','relatedReport')->name('api.public-report.related-report');
         });
         Route::get('user/public-report','userReports')->name('api.user.public-report');
         Route::get('user/public-report/saved','userSavedReports')->name('api.user.public-report.saved');
@@ -108,6 +110,15 @@ Route::middleware(['api.auth'])->group(function () {
             Route::get('publication-package', 'publicationPackage')->name('api.lost-report.package');
 
             Route::get('categories','categories')->name('api.lost-report.categories');
+        });
+    });
+
+    Route::controller(LocationController::class)->group(function () {
+        Route::prefix('location')->group(function () {
+            Route::get('provinces','provinces')->name('api.location.provinces');
+            Route::get('cities/{id}','cities')->name('api.location.cities');
+            Route::get('districts/{id}','districts')->name('api.location.districts');
+            Route::get('villages/{id}','villages')->name('api.location.villages');
         });
     });
 });
