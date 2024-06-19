@@ -6,10 +6,12 @@ use App\Http\Controllers\API\Auth\RegisterController;
 use App\Http\Controllers\API\Content\AboutUsController;
 use App\Http\Controllers\API\Content\ContactUsController;
 use App\Http\Controllers\API\Content\OnboardingController;
+use App\Http\Controllers\API\Home\HomeController;
 use App\Http\Controllers\API\Home\ProfileController;
 use App\Http\Controllers\API\Location\LocationController;
 use App\Http\Controllers\API\LostReport\LostReportController;
 use App\Http\Controllers\API\PublicReport\PublicReportController;
+use App\Http\Controllers\API\Transaction\LostReportTransactionController;
 use App\Http\Controllers\API\User\UserController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -119,6 +121,18 @@ Route::middleware(['api.auth'])->group(function () {
             Route::get('cities/{id}','cities')->name('api.location.cities');
             Route::get('districts/{id}','districts')->name('api.location.districts');
             Route::get('villages/{id}','villages')->name('api.location.villages');
+        });
+    });
+
+    Route::controller(HomeController::class)->group(function () {
+        Route::prefix('home')->group(function () {
+            Route::get('trend-public-report','trendPublicReport')->name('api.home.trend-public-report');
+        });
+    });
+
+    Route::controller(LostReportTransactionController::class)->group(function () {
+        Route::prefix('transaction/lost-report')->group(function () {
+            Route::post('create','createLostTransaction')->name('api.transaction.lost-report.create');
         });
     });
 });

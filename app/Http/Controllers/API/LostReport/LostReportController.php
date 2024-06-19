@@ -5,9 +5,11 @@ namespace App\Http\Controllers\API\LostReport;
 use App\Http\Controllers\Controller;
 use App\Models\LostCategory;
 use App\Models\LostReport;
+use App\Models\Media;
 use App\Models\PublicationPackage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\File;
 use Illuminate\Validation\ValidationException;
 
 class LostReportController extends Controller
@@ -86,9 +88,31 @@ class LostReportController extends Controller
             if ($validated) {
                 DB::beginTransaction();
                 $lostReport = LostReport::create($validated);
+                // if ($request->hasFile('media')) {
+                //     foreach ($request->file('media') as $key => $value) {
+                //         $lostReport->addMedia($value)->toMediaCollection('lost_report');
+                //     }
+                // }
+                
                 if ($request->hasFile('media')) {
-                    foreach ($request->file('media') as $key => $value) {
-                        $lostReport->addMedia($value)->toMediaCollection('lost_report');
+                    $file = $request->file('media');
+                    foreach ($file as $key => $value) {
+                        $extension = $value->getClientOriginalExtension();
+                        $fileName = time().'-'.$lostReport->id.'-'.$key.'.'.$extension;
+                        $path = 'media/lost-report';
+                        $size = File::size($value);
+                        Media::create(
+                            [
+                                'model_id' => $lostReport->id,
+                                'media_type_id' => 4,
+                                'file_name' => $fileName,
+                                'path' => $path,
+                                'url' => $path.'/'.$fileName,
+                                'mime_type' => $extension,
+                                'size' => $size,
+                            ]
+                        );
+                        $value->move($path, $fileName);
                     }
                 }
                 DB::commit();

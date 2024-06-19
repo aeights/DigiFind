@@ -20,7 +20,7 @@ return new class extends Migration
             $table->foreignIdFor(User::class);
             $table->foreignIdFor(LostReport::class);
             $table->foreignIdFor(PublicationPackage::class);
-            $table->foreignIdFor(TransactionStatus::class);
+            $table->foreignIdFor(TransactionStatus::class)->default(1);
             $table->timestamp('transaction_date');
             $table->timestamp('expired');
             $table->timestamps();

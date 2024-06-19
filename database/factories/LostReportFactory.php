@@ -17,8 +17,8 @@ class LostReportFactory extends Factory
     public function definition(): array
     {
         return [
-            'user_id' => fake()->numberBetween(1,3),
-            'lost_category_id' => fake()->numberBetween(1,3),
+            'user_id' => fake()->numberBetween(1,10),
+            'lost_category_id' => fake()->numberBetween(1,4),
             'name' => $this->faker->sentence,
             'unique_number' => fake()->randomElement([null,fake()->randomLetter()]),
             'description' => $this->faker->paragraph,

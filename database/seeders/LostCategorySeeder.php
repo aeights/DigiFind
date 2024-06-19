@@ -15,20 +15,10 @@ class LostCategorySeeder extends Seeder
     public function run(): void
     {
         $types = [
-            ['name' => 'Lalu lintas', 'slug' => Str::slug('Lalu lintas')],
-            ['name' => 'Transportasi umum', 'slug' => Str::slug('Transportasi umum')],
-            ['name' => 'Polusi udara', 'slug' => Str::slug('Polusi udara')],
-            ['name' => 'Kesehatan', 'slug' => Str::slug('Kesehatan')],
-            ['name' => 'Layanan kesehatan', 'slug' => Str::slug('Layanan kesehatan')],
-            ['name' => 'Pendidikan', 'slug' => Str::slug('Pendidikan')],
-            ['name' => 'Perubahan iklim', 'slug' => Str::slug('Perubahan iklim')],
-            ['name' => 'Pencemaran air, tanah, dan udara', 'slug' => Str::slug('Pencemaran air, tanah, dan udara')],
-            ['name' => 'Kerusakan hutan', 'slug' => Str::slug('Kerusakan hutan')],
-            ['name' => 'Layanan publik', 'slug' => Str::slug('Layanan publik')],
-            ['name' => 'Pekerjaan', 'slug' => Str::slug('Pekerjaan')],
-            ['name' => 'Privasi data', 'slug' => Str::slug('Privasi data')],
-            ['name' => 'Tindakan kriminal', 'slug' => Str::slug('Tindakan kriminal')],
-            ['name' => 'Pembangunan inklusif', 'slug' => Str::slug('Pembangunan inklusif')],
+            ['name' => 'Kendaraan', 'slug' => Str::slug('Kendaraan')],
+            ['name' => 'Dompet', 'slug' => Str::slug('Dompet')],
+            ['name' => 'Elektronik', 'slug' => Str::slug('Elektronik')],
+            ['name' => 'Lainnya', 'slug' => Str::slug('Lainnya')],
         ];
 
         foreach ($types as $key => $value) {
