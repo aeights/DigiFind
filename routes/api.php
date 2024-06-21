@@ -10,6 +10,7 @@ use App\Http\Controllers\API\Home\HomeController;
 use App\Http\Controllers\API\Home\ProfileController;
 use App\Http\Controllers\API\Location\LocationController;
 use App\Http\Controllers\API\LostReport\LostReportController;
+use App\Http\Controllers\API\LostReport\MyReportController as MyLostReportController;
 use App\Http\Controllers\API\PublicReport\PublicReportController;
 use App\Http\Controllers\API\Transaction\LostReportTransactionController;
 use App\Http\Controllers\API\User\UserController;
@@ -107,11 +108,19 @@ Route::middleware(['api.auth'])->group(function () {
             Route::post('store','store')->name('api.lost-report.store');
             Route::post('update/{id}','update')->name('api.lost-report.update');
             Route::get('delete/{id}','delete')->name('api.lost-report.delete');
+            Route::get('save/{id}','save')->name('api.lost-report.save');
 
             Route::get('report-summary/{id}', 'reportSummary')->name('api.lost-report.summary');
             Route::get('publication-package', 'publicationPackage')->name('api.lost-report.package');
 
             Route::get('categories','categories')->name('api.lost-report.categories');
+        });
+    });
+
+    Route::controller(MyLostReportController::class)->group(function () {
+        Route::prefix('lost-report')->group(function () {
+            Route::get('status/{id}','getByStatus')->name('api.lost-report.profile');
+            Route::get('saved-report','savedReports')->name('api.lost-report.saved-report');
         });
     });
 

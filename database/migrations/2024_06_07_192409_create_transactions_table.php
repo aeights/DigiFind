@@ -21,6 +21,8 @@ return new class extends Migration
             $table->foreignIdFor(LostReport::class);
             $table->foreignIdFor(PublicationPackage::class);
             $table->foreignIdFor(TransactionStatus::class)->default(1);
+            $table->bigInteger('reward');
+            $table->bigInteger('total');
             $table->timestamp('transaction_date');
             $table->timestamp('expired');
             $table->timestamps();

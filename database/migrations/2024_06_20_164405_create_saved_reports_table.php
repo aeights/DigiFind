@@ -1,6 +1,6 @@
 <?php
 
-use App\Models\PublicReport;
+use App\Models\ReportType;
 use App\Models\User;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
@@ -13,10 +13,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('saved_public_reports', function (Blueprint $table) {
+        Schema::create('saved_reports', function (Blueprint $table) {
             $table->id();
             $table->foreignIdFor(User::class);
-            $table->foreignIdFor(PublicReport::class);
+            $table->foreignId('report_id');
+            $table->foreignIdFor(ReportType::class);
             $table->timestamps();
         });
     }
@@ -26,6 +27,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('saved_public_reports');
+        Schema::dropIfExists('saved_reports');
     }
 };

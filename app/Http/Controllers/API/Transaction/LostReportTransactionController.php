@@ -18,14 +18,18 @@ class LostReportTransactionController extends Controller
                 'user_id' => 'required|exists:users,id',
                 'lost_report_id' => 'required|exists:lost_reports,id',
                 'publication_package_id' => 'required|exists:publication_packages,id',
+                'reward' => 'required|numeric',
+                'total' => 'required|numeric',
             ]);
             if ($validated) {
                 $package = PublicationPackage::findOrFail($request->publication_package_id);
                 $expired = Carbon::now()->addDays($package->duration);
                 $transaction = Transaction::create([
                     'user_id' => $request->user_id,
-                    'lost_report' => $request->lost_report_id,
+                    'lost_report_id' => $request->lost_report_id,
                     'publication_package_id' => $request->publication_package_id,
+                    'reward' => $request->reward,
+                    'total' => $request->total,
                     'transaction_date' => Carbon::now(),
                     'expired' => $expired,
                 ]);

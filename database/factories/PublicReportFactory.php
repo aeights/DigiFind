@@ -22,11 +22,11 @@ class PublicReportFactory extends Factory
             'user_id' => fake()->numberBetween(1,13),
             'public_category_id' => fake()->numberBetween(1,13),
             'public_sub_category_id' => fake()->numberBetween(1,20),
-            'title' => $this->faker->sentence,
-            'date' => $this->faker->dateTimeBetween('-1 year', 'now'),
+            'title' => fake()->sentence,
+            'date' => fake()->dateTimeBetween('-1 year', 'now'),
             'village_code' => fake()->randomElement($villages),
-            'location_detail' => $this->faker->address,
-            'description' => $this->faker->paragraph,
+            'location_detail' => fake()->address,
+            'description' => fake()->paragraph,
         ];
     }
 }

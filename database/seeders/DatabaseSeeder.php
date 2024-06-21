@@ -26,6 +26,7 @@ class DatabaseSeeder extends Seeder
             MediaTypeSeeder::class,
             MediaSeeder::class,
             TransactionStatusSeeder::class,
+            TransactionSeeder::class,
             LocationSeeder::class
         ]);
     }

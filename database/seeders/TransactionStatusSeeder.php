@@ -14,10 +14,11 @@ class TransactionStatusSeeder extends Seeder
     public function run(): void
     {
         $statuses = [
-            ['status' => 'Pending'],
-            ['status' => 'Completed'],
-            ['status' => 'Failed'],
-            ['status' => 'Cancelled'],
+            ['status' => 'Menunggu Pembayaran'],
+            ['status' => 'Di Proses'],
+            ['status' => 'Sedang Berlangsung'],
+            ['status' => 'Selesai'],
+            ['status' => 'Gagal'],
         ];
 
         foreach ($statuses as $status) {

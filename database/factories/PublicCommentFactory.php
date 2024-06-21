@@ -19,7 +19,7 @@ class PublicCommentFactory extends Factory
         return [
             'user_id' => fake()->numberBetween(1,10),
             'public_report_id' => fake()->numberBetween(1,50),
-            'body' => $this->faker->sentence,
+            'body' => fake()->sentence,
         ];
     }
 }

@@ -7,6 +7,9 @@ use App\Models\LostCategory;
 use App\Models\LostReport;
 use App\Models\Media;
 use App\Models\PublicationPackage;
+use App\Models\SavedReport;
+use Firebase\JWT\JWT;
+use Firebase\JWT\Key;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
@@ -31,7 +34,38 @@ class LostReportController extends Controller
                 'offset' => 'required'
             ]);
             if ($validated) {
-                $reports = DB::select("SELECT a.*, GROUP_CONCAT(b.url SEPARATOR ', ') AS url FROM lost_reports a JOIN media b ON a.id = b.model_id WHERE b.media_type_id = 4 GROUP BY a.id LIMIT ? OFFSET ?", [$request->limit, $request->offset]);
+                $reports = DB::select("SELECT 
+                        a.*,
+                        i.name,
+                        h.url AS user_url,
+                        g.name AS category,
+                        GROUP_CONCAT(b.url SEPARATOR ', ') AS url,
+                        CONCAT(d.name, ', ', c.name, ', ', e.name, ', ', f.name) AS address,
+                        j.reward,
+                        j.expired
+                    FROM
+                        lost_reports a
+                    LEFT JOIN
+                        media b ON a.id = b.model_id AND b.media_type_id = 4
+                    LEFT JOIN
+                        media h ON a.user_id = h.model_id AND h.media_type_id = 2
+                    LEFT JOIN
+                        users i ON a.user_id = i.id
+                    LEFT JOIN
+                        lost_categories g ON a.lost_category_id = g.id
+                    LEFT JOIN
+                        villages d ON a.village_code = d.village_code
+                    LEFT JOIN
+                        districts c ON d.district_code = c.district_code
+                    LEFT JOIN
+                        cities e ON c.city_code = e.city_code
+                    LEFT JOIN
+                        provinces f ON e.province_code = f.province_code
+                    LEFT JOIN
+                        transactions j ON a.id = j.lost_report_id
+                    GROUP BY
+                    a.id, g.name, h.url, i.name, j.reward, j.expired
+                    LIMIT ? OFFSET ?", [$request->limit, $request->offset]);
                 return response()->json([
                     "status" => true,
                     "message" => "Get list lost report is successful",
@@ -56,8 +90,39 @@ class LostReportController extends Controller
     public function show($id)
     {
         try {
-            $report = LostReport::findOrFail($id);
-            $report->getMedia('lost_report');
+            $report = DB::select("SELECT 
+                a.*,
+                i.name,
+                h.url AS user_url,
+                g.name AS category,
+                GROUP_CONCAT(b.url SEPARATOR ', ') AS url,
+                CONCAT(d.name, ', ', c.name, ', ', e.name, ', ', f.name) AS address,
+                j.reward,
+                j.expired
+            FROM
+                lost_reports a
+            LEFT JOIN
+                media b ON a.id = b.model_id AND b.media_type_id = 4
+            LEFT JOIN
+                media h ON a.user_id = h.model_id AND h.media_type_id = 2
+            LEFT JOIN
+                users i ON a.user_id = i.id
+            LEFT JOIN
+                lost_categories g ON a.lost_category_id = g.id
+            LEFT JOIN
+                villages d ON a.village_code = d.village_code
+            LEFT JOIN
+                districts c ON d.district_code = c.district_code
+            LEFT JOIN
+                cities e ON c.city_code = e.city_code
+            LEFT JOIN
+                provinces f ON e.province_code = f.province_code
+            LEFT JOIN
+                transactions j ON a.id = j.lost_report_id
+            WHERE
+                a.id = ?
+            GROUP BY
+            a.id, g.name, h.url, i.name, j.reward, j.expired", [$id]);
             return response()->json([
                 "status" => true,
                 "message" => "Get lost report is successful",
@@ -88,12 +153,7 @@ class LostReportController extends Controller
             if ($validated) {
                 DB::beginTransaction();
                 $lostReport = LostReport::create($validated);
-                // if ($request->hasFile('media')) {
-                //     foreach ($request->file('media') as $key => $value) {
-                //         $lostReport->addMedia($value)->toMediaCollection('lost_report');
-                //     }
-                // }
-                
+
                 if ($request->hasFile('media')) {
                     $file = $request->file('media');
                     foreach ($file as $key => $value) {
@@ -119,6 +179,7 @@ class LostReportController extends Controller
                 return response()->json([
                     "status" => true,
                     "message" => 'Add lost report is successful',
+                    "id" => $lostReport->id
                 ]);
             }
             return response()->json([
@@ -183,12 +244,26 @@ class LostReportController extends Controller
     public function delete($id)
     {
         try {
+            DB::beginTransaction();
             $report = LostReport::findOrFail($id)->delete();
+            $media = Media::where('model_id',$id)->where('media_type_id',4);
+
+            if (count($media->get()) > 0) {
+                foreach ($media->get() as $key => $value) {
+                    $file = public_path($value->url);
+                    if (file_exists($file)) {
+                        File::delete($value->url);
+                    }
+                }
+            }
+            $media->delete();
+            DB::commit();
             return response()->json([
                 "status" => true,
                 "message" => "Delete lost report is successful",
             ]);
         } catch (\Exception $th) {
+            DB::rollBack();
             return response()->json([
                 "status" => false,
                 "message" => $th->getMessage(),
@@ -233,6 +308,37 @@ class LostReportController extends Controller
                     "data" => $data
                 ]);
             }
+        } catch (\Exception $ex) {
+            return response()->json([
+                "status" => false,
+                "message" => $ex->getMessage(),
+                "error" => $ex,
+            ]);
+        }
+    }
+
+    public function save(Request $request, $id)
+    {
+        try {
+            $token = $request->bearerToken();
+            $decoded = JWT::decode($token, new Key($this->tokenKey, 'HS256'));
+            $report = LostReport::findOrFail($id);
+            if ($report) {
+                SavedReport::create([
+                    'report_id' => $report->id,
+                    'report_type_id' => 2,
+                    'user_id' => $decoded->id
+                ]);
+                return response()->json([
+                    "status" => true,
+                    "message" => "Save public report is successful",
+                    "data" => $report
+                ]);
+            }
+            return response()->json([
+                "status" => true,
+                "message" => "Public report not found",
+            ],404);
         } catch (\Exception $ex) {
             return response()->json([
                 "status" => false,

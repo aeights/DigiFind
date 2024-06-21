@@ -7,9 +7,9 @@ use Illuminate\Database\Eloquent\Model;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 
-class LostReport extends Model implements HasMedia
+class LostReport extends Model
 {
-    use HasFactory, InteractsWithMedia;
+    use HasFactory;
 
     protected $guarded = ['id'];
 }

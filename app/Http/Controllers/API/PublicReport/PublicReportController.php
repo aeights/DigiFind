@@ -4,12 +4,11 @@ namespace App\Http\Controllers\API\PublicReport;
 
 use App\Http\Controllers\Controller;
 use App\Models\Media;
-use App\Models\PublicCategory;
 use App\Models\PublicComment;
 use App\Models\PublicReport;
 use App\Models\ReportedComment;
 use App\Models\ReportedReport;
-use App\Models\SavedPublicReport;
+use App\Models\SavedReport;
 use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
 use Illuminate\Http\Request;
@@ -36,11 +35,6 @@ class PublicReportController extends Controller
                 'offset' => 'required'
             ]);
             if ($validated) {
-                // $reports = DB::select("SELECT a.*, GROUP_CONCAT(b.url SEPARATOR ', ') AS url FROM public_reports a JOIN media b ON a.id = b.model_id WHERE b.media_type_id = 3 GROUP BY a.id LIMIT ? OFFSET ?", [$request->limit, $request->offset]);
-                // $reports = PublicReport::select()->orderBy('created_at','desc')->offset($request->offset)->limit($request->limit)->get();
-                // foreach ($reports as $key => $value) {
-                //     $value->getMedia('public_report');
-                // }
                 $reports = DB::select("SELECT 
                     a.*,
                     i.name,
@@ -94,12 +88,6 @@ class PublicReportController extends Controller
     public function show($id)
     {
         try {
-            // $report = DB::select("SELECT a.*, GROUP_CONCAT(b.url SEPARATOR ', ') AS url FROM public_reports a JOIN media b ON a.id = b.model_id WHERE b.media_type_id = 3 AND a.id = ? GROUP BY a.id",[$id]);
-            // $report = PublicReport::findOrFail($id);
-            // $report->getMedia('public_report');
-
-            // $report = DB::select("SELECT a.*, GROUP_CONCAT(b.url SEPARATOR ', ') AS url FROM public_reports a LEFT JOIN media b ON a.id = b.model_id AND b.media_type_id = 3 WHERE a.id = ? GROUP BY a.id",[$id]);
-            
             $report = DB::select("SELECT 
                     a.*,
                     i.name,
@@ -164,11 +152,6 @@ class PublicReportController extends Controller
             if ($validated) {
                 DB::beginTransaction();
                 $publicReport = PublicReport::create($validated);
-                // if ($request->hasFile('media')) {
-                //     foreach ($request->file('media') as $key => $value) {
-                //         $publicReport->addMedia($value)->toMediaCollection('public_report');
-                //     }
-                // }
 
                 if ($request->hasFile('media')) {
                     $file = $request->file('media');
@@ -301,10 +284,6 @@ class PublicReportController extends Controller
             if ($validated) {
                 $token = $request->bearerToken();
                 $decoded = JWT::decode($token, new Key($this->tokenKey, 'HS256'));
-                // $reports = PublicReport::where('user_id',$decoded->id)->orderBy('created_at','desc')->offset($request->offset)->limit($request->limit)->get();
-                // foreach ($reports as $key => $value) {
-                //     $value->getMedia('public_report');
-                // }
 
                 $reports = DB::select("SELECT 
                     a.*,
@@ -362,11 +341,6 @@ class PublicReportController extends Controller
                 'keyword' => 'required'
             ]);
             if ($validated) {
-                // $reports = PublicReport::where('title','like',"%$request->keyword%")->get();
-                // foreach ($reports as $key => $value) {
-                //     $value->getMedia('public_report');
-                // }
-                // $reports = DB::select("SELECT a.*, GROUP_CONCAT(b.url SEPARATOR ', ') AS url FROM public_reports a LEFT JOIN media b ON a.id = b.model_id AND b.media_type_id = 3 WHERE a.title LIKE ? GROUP BY a.id",["%".$request->keyword."%"]);
                 $reports = DB::select("SELECT 
                     a.*,
                     i.name,
@@ -423,8 +397,9 @@ class PublicReportController extends Controller
             $decoded = JWT::decode($token, new Key($this->tokenKey, 'HS256'));
             $report = PublicReport::findOrFail($id);
             if ($report) {
-                SavedPublicReport::create([
-                    'public_report_id' => $report->id,
+                SavedReport::create([
+                    'report_id' => $report->id,
+                    'report_type_id' => 1,
                     'user_id' => $decoded->id
                 ]);
                 return response()->json([
@@ -451,14 +426,6 @@ class PublicReportController extends Controller
         try {
             $token = $request->bearerToken();
             $decoded = JWT::decode($token, new Key($this->tokenKey, 'HS256'));
-            // $savedReports = PublicReport::join('saved_public_reports', 'public_reports.id', '=', 'saved_public_reports.public_report_id')
-            //     ->where('saved_public_reports.user_id', $decoded->id)
-            //     ->select('public_reports.*')
-            //     ->get();
-            // $savedReports = DB::select("SELECT a.* FROM public_reports a JOIN saved_public_reports b ON a.id = b.public_report_id WHERE b.user_id = ?",[$decoded->id]);
-            // foreach ($savedReports as $value) {
-            //     $value->getMedia('public_report');
-            // }
 
             $savedReports = DB::select("SELECT 
                     a.*,
@@ -486,7 +453,7 @@ class PublicReportController extends Controller
                 LEFT JOIN
                     provinces f ON e.province_code = f.province_code
                 JOIN
-                    saved_public_reports j ON a.id = j.public_report_id
+                    saved_reports j ON a.id = j.report_id AND j.report_type_id = 1
                 WHERE j.user_id = ?
                 GROUP BY
                     a.id, g.name, h.url, i.name",[$decoded->id]);
@@ -631,7 +598,6 @@ class PublicReportController extends Controller
     public function categories()
     {
         try {
-            // $data = PublicCategory::all();
             $data = DB::select("SELECT 
                 a.id AS category_id, 
                 a.name AS category_name, 
