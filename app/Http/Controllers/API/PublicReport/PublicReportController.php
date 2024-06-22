@@ -514,7 +514,6 @@ class PublicReportController extends Controller
         try {
             $validated = $request->validate([
                 'report_id' => 'required',
-                'report_type_id' => 'required|exists:report_types,id',
                 'reason' => 'required'
             ]);
             if ($validated) {
@@ -526,7 +525,7 @@ class PublicReportController extends Controller
                     ReportedReport::create([
                         'user_id' => $decoded->id,
                         'report_id' => $report->id,
-                        'report_type_id' => $request->report_type_id,
+                        'report_type_id' => 1,
                         'reason' => $request->reason
                     ]);
                     return response()->json([

@@ -109,6 +109,9 @@ Route::middleware(['api.auth'])->group(function () {
             Route::post('update/{id}','update')->name('api.lost-report.update');
             Route::get('delete/{id}','delete')->name('api.lost-report.delete');
             Route::get('save/{id}','save')->name('api.lost-report.save');
+            Route::post('report','report')->name('api.lost-report.report');
+            Route::get('search','search')->name('api.lost-report.search');
+            Route::get('related-report/{id}','relatedReport')->name('api.lost-report.related-report');
 
             Route::get('report-summary/{id}', 'reportSummary')->name('api.lost-report.summary');
             Route::get('publication-package', 'publicationPackage')->name('api.lost-report.package');
