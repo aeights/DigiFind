@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\PublicComment;
 use App\Models\PublicReport;
 use App\Models\User;
 use Illuminate\Database\Migrations\Migration;
@@ -16,7 +17,7 @@ return new class extends Migration
         Schema::create('reported_comments', function (Blueprint $table) {
             $table->id();
             $table->foreignIdFor(User::class);
-            $table->foreignIdFor(PublicReport::class);
+            $table->foreignIdFor(PublicComment::class);
             $table->text('reason');
             $table->timestamps();
         });

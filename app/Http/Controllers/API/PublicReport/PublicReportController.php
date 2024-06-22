@@ -558,18 +558,18 @@ class PublicReportController extends Controller
     {
         try {
             $validated = $request->validate([
-                'comment_id' => 'required|exists:public_comments,id',
+                'public_comment_id' => 'required|exists:public_comments,id',
                 'reason' => 'required'
             ]);
             if ($validated) {
                 $token = $request->bearerToken();
                 $decoded = JWT::decode($token, new Key($this->tokenKey, 'HS256'));
 
-                $comment = PublicComment::findOrFail($request->comment_id);
+                $comment = PublicComment::findOrFail($request->public_comment_id);
                 if ($comment) {
                     ReportedComment::create([
                         'user_id' => $decoded->id,
-                        'comment_id' => $request->comment_id,
+                        'public_comment_id' => $request->public_comment_id,
                         'reason' => $request->reason
                     ]);
                     return response()->json([
