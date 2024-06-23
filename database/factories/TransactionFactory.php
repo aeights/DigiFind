@@ -17,7 +17,7 @@ class TransactionFactory extends Factory
     public function definition(): array
     {
         return [
-            'user_id' => fake()->numberBetween(1,10),
+            'user_id' => fake()->numberBetween(1,11),
             'lost_report_id' => fake()->numberBetween(1,50),
             'publication_package_id' => fake()->numberBetween(1,3),
             'transaction_status_id' => fake()->numberBetween(1,5),

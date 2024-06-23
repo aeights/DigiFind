@@ -32,9 +32,12 @@ class MyReportController extends Controller
                 GROUP_CONCAT(b.url SEPARATOR ', ') AS url,
                 CONCAT(d.name, ', ', c.name, ', ', e.name, ', ', f.name) AS address,
                 j.reward,
-                j.expired
+                j.expired,
+                k.duration
             FROM
-                lost_reports a
+                transactions j
+            LEFT JOIN
+                lost_reports a ON a.id = j.lost_report_id
             LEFT JOIN
                 media b ON a.id = b.model_id AND b.media_type_id = 4
             LEFT JOIN
@@ -44,6 +47,8 @@ class MyReportController extends Controller
             LEFT JOIN
                 lost_categories g ON a.lost_category_id = g.id
             LEFT JOIN
+                publication_packages k ON j.publication_package_id = k.id
+            LEFT JOIN
                 villages d ON a.village_code = d.village_code
             LEFT JOIN
                 districts c ON d.district_code = c.district_code
@@ -51,14 +56,12 @@ class MyReportController extends Controller
                 cities e ON c.city_code = e.city_code
             LEFT JOIN
                 provinces f ON e.province_code = f.province_code
-            LEFT JOIN
-                transactions j ON a.id = j.lost_report_id
             WHERE
                 j.user_id = ?
             AND
                 j.transaction_status_id = ?
             GROUP BY
-            a.id, g.name, h.url, i.name, j.reward, j.expired", [$decoded->id,$id]);
+                a.id, g.name, h.url, i.name, j.reward, j.expired, k.duration", [$decoded->id,$id]);
             return response()->json([
                 "status" => true,
                 "message" => "Get lost report is successful",
