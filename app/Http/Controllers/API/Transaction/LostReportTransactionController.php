@@ -28,6 +28,7 @@ class LostReportTransactionController extends Controller
                     'user_id' => $request->user_id,
                     'lost_report_id' => $request->lost_report_id,
                     'publication_package_id' => $request->publication_package_id,
+                    'transaction_status_id' => 2,
                     'reward' => $request->reward,
                     'total' => $request->total,
                     'transaction_date' => Carbon::now(),

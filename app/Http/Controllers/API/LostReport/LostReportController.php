@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\API\LostReport;
 
 use App\Http\Controllers\Controller;
+use App\Models\Chat;
+use App\Models\DiscoveredItem;
 use App\Models\LostCategory;
 use App\Models\LostReport;
 use App\Models\Media;
@@ -67,6 +69,8 @@ class LostReportController extends Controller
                         cities e ON c.city_code = e.city_code
                     LEFT JOIN
                         provinces f ON e.province_code = f.province_code
+                    WHERE
+                        j.transaction_status_id = 2
                     GROUP BY
                         a.id, g.name, h.url, i.name, j.reward, j.expired, k.duration
                     LIMIT ? OFFSET ?", [$request->limit, $request->offset]);
@@ -133,7 +137,7 @@ class LostReportController extends Controller
             return response()->json([
                 "status" => true,
                 "message" => "Get lost report is successful",
-                'data' => $report
+                'data' => $report[0]
             ]);
         } catch (\Exception $th) {
             return response()->json([
@@ -464,6 +468,129 @@ class LostReportController extends Controller
         }
     }
 
+    public function searchAndFilter(Request $request)
+    {
+        try {
+            $validated = $request->validate([
+                'keyword' => 'required',
+                'village_code' => 'nullable|string',
+                'city_code' => 'nullable|string',
+                'district_code' => 'nullable|string',
+                'province_code' => 'nullable|string',
+                'category_id' => 'nullable|string',
+                'sort' => 'nullable|string|in:newest,oldest,a-z,z-a'
+            ]);
+
+            if ($validated) {
+                $query = "
+                    SELECT 
+                        a.*,
+                        i.name AS user_name,
+                        h.url AS user_url,
+                        g.name AS category,
+                        GROUP_CONCAT(b.url SEPARATOR ', ') AS url,
+                        CONCAT(d.name, ', ', c.name, ', ', e.name, ', ', f.name) AS address,
+                        j.reward,
+                        j.expired,
+                        k.duration
+                    FROM
+                        transactions j
+                    LEFT JOIN
+                        lost_reports a ON a.id = j.lost_report_id
+                    LEFT JOIN
+                        media b ON a.id = b.model_id AND b.media_type_id = 4
+                    LEFT JOIN
+                        media h ON a.user_id = h.model_id AND h.media_type_id = 2
+                    LEFT JOIN
+                        users i ON a.user_id = i.id
+                    LEFT JOIN
+                        lost_categories g ON a.lost_category_id = g.id
+                    LEFT JOIN
+                        publication_packages k ON j.publication_package_id = k.id
+                    LEFT JOIN
+                        villages d ON a.village_code = d.village_code
+                    LEFT JOIN
+                        districts c ON d.district_code = c.district_code
+                    LEFT JOIN
+                        cities e ON c.city_code = e.city_code
+                    LEFT JOIN
+                        provinces f ON e.province_code = f.province_code
+                    WHERE
+                        a.name LIKE ?
+                ";
+
+                $params = ["%".$request->keyword."%"];
+
+                if ($request->has('village_code')) {
+                    $query .= " AND d.village_code = ?";
+                    $params[] = $request->village_code;
+                }
+
+                if ($request->has('city_code')) {
+                    $query .= " AND e.city_code = ?";
+                    $params[] = $request->city_code;
+                }
+
+                if ($request->has('district_code')) {
+                    $query .= " AND c.district_code = ?";
+                    $params[] = $request->district_code;
+                }
+
+                if ($request->has('province_code')) {
+                    $query .= " AND f.province_code = ?";
+                    $params[] = $request->province_code;
+                }
+
+                if ($request->has('category_id')) {
+                    $query .= " AND g.id = ?";
+                    $params[] = $request->category_id;
+                }
+
+                $query .= "
+                    GROUP BY
+                        a.id, g.name, h.url, i.name, j.reward, j.expired, k.duration
+                ";
+
+                if ($request->has('sort')) {
+                    switch ($request->sort) {
+                        case 'newest':
+                            $query .= " ORDER BY a.created_at DESC";
+                            break;
+                        case 'oldest':
+                            $query .= " ORDER BY a.created_at ASC";
+                            break;
+                        case 'a-z':
+                            $query .= " ORDER BY a.name ASC";
+                            break;
+                        case 'z-a':
+                            $query .= " ORDER BY a.name DESC";
+                            break;
+                    }
+                }
+
+                $reports = DB::select($query, $params);
+
+                return response()->json([
+                    "status" => true,
+                    "message" => "Search lost report is successful",
+                    "data" => $reports
+                ]);
+            }
+        } catch (ValidationException $ex) {
+            return response()->json([
+                "status" => false,
+                "message" => "Validation fails",
+                "error" => $ex->errors(),
+            ]);
+        } catch (\Exception $ex) {
+            return response()->json([
+                "status" => false,
+                "message" => $ex->getMessage(),
+                "error" => $ex,
+            ]);
+        }
+    }
+
     public function relatedReport($id)
     {
         try {
@@ -506,6 +633,154 @@ class LostReportController extends Controller
                 "status" => true,
                 "message" => "Get related reports successfully",
                 "data" => $reports
+            ]);
+        } catch (\Exception $ex) {
+            return response()->json([
+                "status" => false,
+                "message" => $ex->getMessage(),
+                "error" => $ex,
+            ]);
+        }
+    }
+
+    public function addDiscoveredItem(Request $request)
+    {
+        try {
+            $validated = $request->validate([
+                'lost_report_id' => 'required|exists:lost_reports,id',
+                'discoverer_id' => 'required|exists:users,id',
+                'description' => 'required',
+                'discovered_date' => 'required|date',
+                'village_code' => 'required|exists:villages,village_code',
+                'location_detail' => 'required',
+            ]);
+            if ($validated) {
+                DB::beginTransaction();
+                $item = DiscoveredItem::create($validated);
+                if ($request->hasFile('media')) {
+                    $file = $request->file('media');
+                    foreach ($file as $key => $value) {
+                        $extension = $value->getClientOriginalExtension();
+                        $fileName = time().'-'.$item->id.'-'.$key.'.'.$extension;
+                        $path = 'media/discovered-item';
+                        $size = File::size($value);
+                        Media::create(
+                            [
+                                'model_id' => $item->id,
+                                'media_type_id' => 5,
+                                'file_name' => $fileName,
+                                'path' => $path,
+                                'url' => $path.'/'.$fileName,
+                                'mime_type' => $extension,
+                                'size' => $size,
+                            ]
+                        );
+                        $value->move($path, $fileName);
+                    }
+                }
+                DB::commit();
+                return response()->json([
+                    "status" => true,
+                    "message" => "Item successfully added",
+                ]);
+            }
+        } catch (ValidationException $ex) {
+            return response()->json([
+                "status" => false,
+                "message" => "Validation fails",
+                "error" => $ex->errors(),
+            ]);
+        } catch (\Exception $ex) {
+            DB::rollBack();
+            return response()->json([
+                "status" => false,
+                "message" => $ex->getMessage(),
+                "error" => $ex,
+            ]);
+        }
+    }
+
+    public function getDiscoverer($id)
+    {
+        try {
+            $data = DB::select("SELECT
+                a.*,
+                b.name AS user_name,
+                c.url AS user_url,
+                GROUP_CONCAT(d.url SEPARATOR ', ') AS url
+            FROM
+                discovered_items a
+            LEFT JOIN
+                users b ON a.discoverer_id = b.id
+            LEFT JOIN
+                media c ON b.id = c.model_id AND c.media_type_id = 2
+            LEFT JOIN
+                media d ON a.id = d.model_id AND d.media_type_id = 5
+            WHERE
+                a.lost_report_id = ?
+            GROUP BY
+                a.id, b.name, c.url",[$id]);
+            return response()->json([
+                "status" => true,
+                "message" => "Get related reports successfully",
+                "data" => $data
+            ]);
+        } catch (\Exception $ex) {
+            return response()->json([
+                "status" => false,
+                "message" => $ex->getMessage(),
+                "error" => $ex,
+            ]);
+        }
+    }
+
+    public function sendChat(Request $request)
+    {
+        try {
+            $validated = $request->validate([
+                'discovered_item_id' => 'required|exists:discovered_items,id',
+                'sender_id' => 'required|exists:users,id',
+                'receiver_id' => 'required|exists:users,id',
+                'body' => 'required',
+            ]);
+            if ($validated) {
+                $chat = Chat::create($validated);
+                return response()->json([
+                    "status" => true,
+                    "message" => "Message sent!",
+                    "data" => $chat
+                ]);
+            }
+        } catch (ValidationException $ex) {
+            return response()->json([
+                "status" => false,
+                "message" => "Validation fails",
+                "error" => $ex->errors(),
+            ]);
+        } catch (\Exception $ex) {
+            return response()->json([
+                "status" => false,
+                "message" => $ex->getMessage(),
+                "error" => $ex,
+            ]);
+        }
+    }
+
+    public function getChat($id)
+    {
+        try {
+            $chat = DB::select("SELECT
+                a.*
+            FROM
+                chats a
+            LEFT JOIN
+                discovered_items b ON a.discovered_item_id = b.id
+            WHERE
+                b.id = ?",[$id]);
+            return response()->json([
+                "status" => true,
+                "message" => "Get messages successful",
+                "data" => $chat
             ]);
         } catch (\Exception $ex) {
             return response()->json([

@@ -31,6 +31,10 @@ class MediaTypeSeeder extends Seeder
                 'name' => 'Lost Report',
                 'slug' => Str::slug('Lost Report')
             ],
+            [
+                'name' => 'Discovered Item',
+                'slug' => Str::slug('Discovered Item')
+            ],
         ];
 
         foreach ($types as $key => $value) {

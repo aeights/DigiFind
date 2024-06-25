@@ -111,12 +111,17 @@ Route::middleware(['api.auth'])->group(function () {
             Route::get('save/{id}','save')->name('api.lost-report.save');
             Route::post('report','report')->name('api.lost-report.report');
             Route::get('search','search')->name('api.lost-report.search');
+            Route::get('search-filter','searchAndFilter')->name('api.lost-report.search-filter');
             Route::get('related-report/{id}','relatedReport')->name('api.lost-report.related-report');
-
+            
             Route::get('report-summary/{id}', 'reportSummary')->name('api.lost-report.summary');
             Route::get('publication-package', 'publicationPackage')->name('api.lost-report.package');
-
+            
             Route::get('categories','categories')->name('api.lost-report.categories');
+            Route::post('add-discovered-item','addDiscoveredItem')->name('api.lost-report.add-discovered-item');
+            Route::get('get-discoverer/{id}','getDiscoverer')->name('api.lost-report.get-discoverer');
+            Route::post('send-chat','sendChat')->name('api.lost-report.send-chat');
+            Route::get('get-chat/{id}','getChat')->name('api.lost-report.get-chat');
         });
     });
 
@@ -124,6 +129,10 @@ Route::middleware(['api.auth'])->group(function () {
         Route::prefix('lost-report')->group(function () {
             Route::get('status/{id}','getByStatus')->name('api.lost-report.profile');
             Route::get('saved-report','savedReports')->name('api.lost-report.saved-report');
+            Route::get('my-help/{id}','myHelp')->name('api.lost-report.my-help');
+
+            Route::get('complete-report/{id}','completeReport')->name('api.lost-report.complete-report');
+            Route::post('choose-discoverer','chooseDiscoverer')->name('api.lost-report.choose-discoverer');
         });
     });
 
@@ -139,6 +148,7 @@ Route::middleware(['api.auth'])->group(function () {
     Route::controller(HomeController::class)->group(function () {
         Route::prefix('home')->group(function () {
             Route::get('trend-public-report','trendPublicReport')->name('api.home.trend-public-report');
+            Route::get('latest-lost-report','latestLostReport')->name('api.home.latest-lost-report');
         });
     });
 
