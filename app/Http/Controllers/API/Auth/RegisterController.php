@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\RegisterRequest;
 use App\Models\Media;
 use App\Models\User;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Illuminate\Validation\ValidationException;
 
@@ -39,6 +40,7 @@ class RegisterController extends Controller
         try {
             $validated = $registerRequest->validated();
             if ($validated) {
+                DB::beginTransaction();
                 $user = User::create([
                     'nik' => $registerRequest->nik,
                     'name' => $registerRequest->name,
@@ -49,7 +51,7 @@ class RegisterController extends Controller
                     'phone' => $registerRequest->phone,
                 ]);
 
-                $avatar = self::getRandomAvatar($registerRequest->gender);
+                $avatar = self::getRandomAvatar(strtolower($user->gender));
                 $extension = pathinfo($avatar, PATHINFO_EXTENSION);
                 $fileName = time().'-'.$user->id.'.'.$extension;
                 $path = 'media/profile';
@@ -70,6 +72,7 @@ class RegisterController extends Controller
                     ]
                 );
                 copy($avatar,public_path().'/'.$path.'/'.$fileName);
+                DB::commit();
                 return response()->json([
                     "status" => true,
                     "message" => "User registration is successful"
@@ -82,6 +85,7 @@ class RegisterController extends Controller
                 "error" => $ex->errors(),
             ],400);
         } catch (\Exception $ex) {
+            DB::rollBack();
             return response()->json([
                 "status" => false,
                 "message" => $ex->getMessage(),
