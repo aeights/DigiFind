@@ -22,7 +22,7 @@ class LocationController extends Controller
                 "status" => false,
                 "message" => $ex->getMessage(),
                 "error" => $ex,
-            ]);
+            ],500);
         }
     }
     public function cities($id)
@@ -47,7 +47,7 @@ class LocationController extends Controller
                 "status" => false,
                 "message" => $ex->getMessage(),
                 "error" => $ex,
-            ]);
+            ],500);
         }
     }
     public function districts($id)
@@ -72,7 +72,7 @@ class LocationController extends Controller
                 "status" => false,
                 "message" => $ex->getMessage(),
                 "error" => $ex,
-            ]);
+            ],500);
         }
     }
     public function villages($id)
@@ -97,7 +97,7 @@ class LocationController extends Controller
                 "status" => false,
                 "message" => $ex->getMessage(),
                 "error" => $ex,
-            ]);
+            ],500);
         }
     }
 }

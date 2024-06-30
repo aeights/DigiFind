@@ -29,35 +29,51 @@ class ProfileController extends Controller
     
     public function profile(Request $request)
     {
-        $token = $request->bearerToken();
-        $decoded = JWT::decode($token, new Key($this->tokenKey, 'HS256'));
-        // $user = User::find($decoded->id);
-        $user = DB::select("SELECT a.id AS user_id, a.nik, a.name, a.gender, a.address, a.email, a.phone, b.url FROM users a JOIN media b ON a.id = b.model_id WHERE b.media_type_id = 2");
-        return response()->json([
-            "status" => true,
-            "message" => "Get user profile successfully",
-            "data" => $user[0],
-        ]);
+        try {
+            $token = $request->bearerToken();
+            $decoded = JWT::decode($token, new Key($this->tokenKey, 'HS256'));
+            $user = DB::select("SELECT a.id AS user_id, a.nik, a.name, a.gender, a.address, a.email, a.phone, b.url FROM users a JOIN media b ON a.id = b.model_id WHERE b.media_type_id = 2 AND a.id = ?",[$decoded->id]);
+            return response()->json([
+                "status" => true,
+                "message" => "Get user profile successfully",
+                "data" => $user[0],
+            ]);
+        } catch (\Exception $ex) {
+            return response()->json([
+                "status" => false,
+                "message" => $ex->getMessage(),
+                "error" => $ex
+            ],500);
+        }
     }
 
     public function logout(Request $request)
     {
-        $token = $request->bearerToken();
-        $decoded = JWT::decode($token, new Key($this->tokenKey, 'HS256'));
-
-        $userRefreshToken = RefreshToken::where('user_id',$decoded->id)->first();
-        
-        if ($userRefreshToken) {
-            $userRefreshToken->delete();
+        try {
+            $token = $request->bearerToken();
+            $decoded = JWT::decode($token, new Key($this->tokenKey, 'HS256'));
+    
+            $userRefreshToken = RefreshToken::where('user_id',$decoded->id)->first();
+            // $userRefreshToken = RefreshToken::where('token',$token)->first();
+            
+            if ($userRefreshToken) {
+                $userRefreshToken->delete();
+                return response()->json([
+                    "status" => true,
+                    "message" => "User logout successfully",
+                ]);
+            }
             return response()->json([
-                "status" => true,
-                "message" => "User logout successfully",
+                "status" => false,
+                "message" => "Token expired",
             ]);
+        } catch (\Exception $ex) {
+            return response()->json([
+                "status" => false,
+                "message" => $ex->getMessage(),
+                "error" => $ex
+            ],500);
         }
-        return response()->json([
-            "status" => false,
-            "message" => "Token expired",
-        ]);
     }
 
     public function uploadPhoto(Request $request)
@@ -105,12 +121,13 @@ class ProfileController extends Controller
                 "status" => false,
                 "message" => "Validation fails",
                 "error" => $ex->errors()
-            ]);
+            ],400);
         } catch (\Exception $ex) {
             return response()->json([
                 "status" => false,
                 "message" => $ex->getMessage(),
-            ]);
+                "error" => $ex
+            ],500);
         }
     }
 
@@ -139,12 +156,13 @@ class ProfileController extends Controller
                 "status" => false,
                 "message" => "Validation fails",
                 "error" => $ex->errors()
-            ]);
+            ],400);
         } catch (\Exception $ex) {
             return response()->json([
                 "status" => false,
                 "message" => $ex->getMessage(),
-            ]);
+                "error" => $ex
+            ],500);
         }
     }
 
@@ -176,12 +194,13 @@ class ProfileController extends Controller
                 "status" => false,
                 "message" => "Validation fails",
                 "error" => $ex->errors()
-            ]);
+            ],400);
         } catch (\Exception $ex) {
             return response()->json([
                 "status" => false,
                 "message" => $ex->getMessage(),
-            ]);
+                "error" => $ex
+            ],500);
         }
     }
 }

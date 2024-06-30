@@ -7,8 +7,6 @@ use App\Mail\SendOTP;
 use App\Models\OneTimePassword;
 use App\Models\User;
 use Carbon\Carbon;
-use Error;
-use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
@@ -60,13 +58,13 @@ class ForgotPasswordController extends Controller
                 'status' => false,
                 'message' => 'Validation failed',
                 'errors' => $e->errors()
-            ]);
-        } catch (Error $e) {
+            ],400);
+        } catch (\Exception $e) {
             return response()->json([
                 'status' => false,
-                'message' => 'Error',
-                'error' => $e->getMessage()
-            ]);
+                'message' => $e->getMessage(),
+                'error' => $e
+            ],500);
         }
     }
 
@@ -95,13 +93,13 @@ class ForgotPasswordController extends Controller
                 'status' => false,
                 'message' => 'Validation failed',
                 'errors' => $e->errors()
-            ]);
-        } catch (Error $e) {
+            ],400);
+        } catch (\Exception $e) {
             return response()->json([
                 'status' => false,
-                'message' => 'Error',
-                'error' => $e->getMessage()
-            ]);
+                'message' => $e->getMessage(),
+                'error' => $e
+            ],500);
         }
     }
 
@@ -136,19 +134,19 @@ class ForgotPasswordController extends Controller
             return response()->json([
                 'status' => false,
                 'message' => 'Password not match',
-            ]);
+            ],400);
         } catch (ValidationException $e) {
             return response()->json([
                 'status' => false,
                 'message' => 'Validation failed',
                 'errors' => $e->errors()
-            ]);
-        } catch (Exception $e) {
+            ],400);
+        } catch (\Exception $e) {
             return response()->json([
                 'status' => false,
-                'message' => 'Error',
-                'error' => $e->getMessage()
-            ]);
+                'message' => $e->getMessage(),
+                'error' => $e
+            ],500);
         }
     }
 }

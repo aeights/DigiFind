@@ -15,6 +15,7 @@ use Firebase\JWT\Key;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class LoginController extends Controller
 {
@@ -29,69 +30,85 @@ class LoginController extends Controller
 
     public function login(LoginRequest $loginRequest)
     {
-        $validated = $loginRequest->validated();
-
-        if ($validated ) {
-            $auth = Auth::attempt($validated);
-            if ($auth) {
-                $user = Auth::user();
-                $payloadToken = [
-                    'id' => $user->id,
-                    'iat' => Carbon::now()->timestamp,
-                    'exp' => Carbon::now()->addDay()->timestamp,
-                ];
-
-                $payloadRefreshToken = [
-                    'id' => $user->id,
-                    'iat' => Carbon::now()->timestamp,
-                    'exp' => Carbon::now()->addMonth(3)->timestamp,
-                ];
-
-                $token = JWT::encode($payloadToken, $this->tokenKey, 'HS256');
-                $refreshToken = JWT::encode($payloadRefreshToken, $this->refreshTokenKey, 'HS256');
-                
-                // $userToken = Token::updateOrCreate(
-                //     [
-                //         'user_id' => $user->id
-                //     ],
-                //     [
-                //         'user_id' => $user->id,
-                //         'token' => $token,
-                //         'expired' => Carbon::now()->addDay()
-                //     ]
-                // );
-                
-                $userRefreshToken = RefreshToken::updateOrCreate(
-                    [
-                        'user_id' => $user->id
-                    ],
-                    [
-                        'user_id' => $user->id,
-                        'token' => $refreshToken,
-                        'expired' => Carbon::now()->addMonth(3)
-                    ]
-                );
-
-                if(!empty($token)){
-                    return response()->json([
-                        "status" => true,
-                        "message" => "User login successful",
-                        "token" => $token,
-                        "refresh_token" => $refreshToken,
-                    ]);
+        try {
+            $validated = $loginRequest->validated();
+    
+            if ($validated ) {
+                $auth = Auth::attempt($validated);
+                if ($auth) {
+                    $user = Auth::user();
+                    $payloadToken = [
+                        'id' => $user->id,
+                        'iat' => Carbon::now()->timestamp,
+                        'exp' => Carbon::now()->addDay()->timestamp,
+                    ];
+    
+                    $payloadRefreshToken = [
+                        'id' => $user->id,
+                        'iat' => Carbon::now()->timestamp,
+                        'exp' => Carbon::now()->addMonth(3)->timestamp,
+                    ];
+    
+                    $token = JWT::encode($payloadToken, $this->tokenKey, 'HS256');
+                    $refreshToken = JWT::encode($payloadRefreshToken, $this->refreshTokenKey, 'HS256');
+                    
+                    // $userToken = Token::updateOrCreate(
+                    //     [
+                    //         'user_id' => $user->id
+                    //     ],
+                    //     [
+                    //         'user_id' => $user->id,
+                    //         'token' => $token,
+                    //         'expired' => Carbon::now()->addDay()
+                    //     ]
+                    // );
+                    
+                    $userRefreshToken = RefreshToken::updateOrCreate(
+                        [
+                            'user_id' => $user->id
+                        ],
+                        [
+                            'user_id' => $user->id,
+                            'token' => $refreshToken,
+                            'expired' => Carbon::now()->addMonth(3)
+                        ]
+                    );
+                    // $userRefreshToken = RefreshToken::create(
+                    //     [
+                    //         'user_id' => $user->id,
+                    //         'token' => $refreshToken,
+                    //         'expired' => Carbon::now()->addMonth(3)
+                    //     ]
+                    // );
+    
+                    if(!empty($token)){
+                        return response()->json([
+                            "status" => true,
+                            "message" => "User login successful",
+                            "token" => $token,
+                            "refresh_token" => $refreshToken,
+                        ]);
+                    }
                 }
+    
+                return response()->json([
+                    "status" => false,
+                    "message" => "Invalid email or password",
+                ],400);
             }
-
+        } catch (ValidationException $ex) {
             return response()->json([
                 "status" => false,
-                "message" => "Invalid email or password",
-            ]);
+                "message" => "Validation fails",
+                "error" => $ex->errors(),
+            ],400);
+        } catch (\Exception $ex) {
+            return response()->json([
+                "status" => false,
+                "message" => $ex->getMessage(),
+                "error" => $ex
+            ],500);
         }
-
-        return response()->json([
-            "status" => false,
-            "message" => "error"
-        ]);
     }
 
     public function generateNewToken(Request $request)
@@ -150,19 +167,19 @@ class LoginController extends Controller
                     "status" => false,
                     "message" => "Token expired",
                     "error" => $e
-                ]);
+                ],401);
             } catch (BeforeValidException $e) {
                 return response()->json([
                     "status" => false,
                     "message" => "Token not yet valid",
                     "error" => $e
-                ]);
+                ],401);
             } catch (\Exception $e) {
                 return response()->json([
                     "status" => false,
                     "message" => "Token is invalid",
                     "error" => $e
-                ]);
+                ],401);
             }
         }
         return response()->json([

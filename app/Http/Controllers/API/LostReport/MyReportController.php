@@ -76,7 +76,7 @@ class MyReportController extends Controller
                 "status" => false,
                 "message" => $th->getMessage(),
                 "error" => $th
-            ]);
+            ],500);
         }
     }
 
@@ -133,7 +133,7 @@ class MyReportController extends Controller
                 "status" => false,
                 "message" => $th->getMessage(),
                 "error" => $th
-            ]);
+            ],500);
         }
     }
 
@@ -195,7 +195,7 @@ class MyReportController extends Controller
                 "status" => false,
                 "message" => $th->getMessage(),
                 "error" => $th
-            ]);
+            ],500);
         }
     }
 
@@ -214,7 +214,7 @@ class MyReportController extends Controller
                 "status" => false,
                 "message" => $ex->getMessage(),
                 "error" => $ex,
-            ]);
+            ],500);
         }
     }
 
@@ -237,13 +237,13 @@ class MyReportController extends Controller
                 "status" => false,
                 "message" => "Validation fails",
                 "error" => $ex->errors(),
-            ]);
+            ],400);
         } catch (\Exception $ex) {
             return response()->json([
                 "status" => false,
                 "message" => $ex->getMessage(),
                 "error" => $ex,
-            ]);
+            ],500);
         }
     }
 }

@@ -7,6 +7,7 @@ use App\Http\Requests\RegisterRequest;
 use App\Models\Media;
 use App\Models\User;
 use Illuminate\Support\Facades\File;
+use Illuminate\Validation\ValidationException;
 
 class RegisterController extends Controller
 {
@@ -35,8 +36,8 @@ class RegisterController extends Controller
 
     public function register(RegisterRequest $registerRequest)
     {
-        $validated = $registerRequest->validated();
         try {
+            $validated = $registerRequest->validated();
             if ($validated) {
                 $user = User::create([
                     'nik' => $registerRequest->nik,
@@ -74,17 +75,18 @@ class RegisterController extends Controller
                     "message" => "User registration is successful"
                 ]);
             }
-    
+        } catch (ValidationException $ex) {
             return response()->json([
                 "status" => false,
-                "message" => "Validation error"
-            ]);
-        } catch (\Throwable $th) {
+                "message" => "Validation fails",
+                "error" => $ex->errors(),
+            ],400);
+        } catch (\Exception $ex) {
             return response()->json([
                 "status" => false,
-                "message" => $th->getMessage(),
-                "error" => $th
-            ]);
+                "message" => $ex->getMessage(),
+                "error" => $ex
+            ],500);
         }
     }
 }

@@ -68,20 +68,19 @@ class PublicReportController extends Controller
                     "message" => "Get list public report is successful",
                     'data' => $reports
                 ]);
-                // a.id, g.name, h.url, i.name
             }
         } catch (ValidationException $ex) {
             return response()->json([
                 "status" => false,
                 "message" => "Validation fails",
                 "error" => $ex->errors(),
-            ]);
+            ],400);
         } catch (\Exception $ex) {
             return response()->json([
                 "status" => false,
                 "message" => $ex->getMessage(),
                 "error" => $ex
-            ]);
+            ],500);
         }
     }
 
@@ -132,7 +131,7 @@ class PublicReportController extends Controller
                 "status" => false,
                 "message" => $th->getMessage(),
                 "error" => $th
-            ]);
+            ],500);
         }
     }
     
@@ -148,6 +147,7 @@ class PublicReportController extends Controller
                 'village_code' => 'required',
                 'location_detail' => 'required',
                 'description' => 'required',
+                'media.*' => 'required|image'
             ]);
             if ($validated) {
                 DB::beginTransaction();
@@ -189,14 +189,14 @@ class PublicReportController extends Controller
                 "status" => false,
                 "message" => "Validation fails",
                 "error" => $ex->errors(),
-            ]);
+            ],400);
         } catch (\Exception $ex) {
             DB::rollBack();
             return response()->json([
                 "status" => false,
                 "message" => $ex->getMessage(),
                 "error" => $ex
-            ]);
+            ],500);
         }
     }
     
@@ -231,14 +231,14 @@ class PublicReportController extends Controller
                 "status" => false,
                 "message" => "Validation fails",
                 "error" => $ex->errors(),
-            ]);
+            ],400);
         } catch (\Exception $ex) {
             DB::rollBack();
             return response()->json([
                 "status" => false,
                 "message" => $ex->getMessage(),
                 "error" => $ex
-            ]);
+            ],500);
         }
     }
 
@@ -270,7 +270,7 @@ class PublicReportController extends Controller
                 "status" => false,
                 "message" => $th->getMessage(),
                 "error" => $th
-            ]);
+            ],500);
         }
     }
 
@@ -324,13 +324,13 @@ class PublicReportController extends Controller
                 "status" => false,
                 "message" => "Validation fails",
                 "error" => $ex->errors(),
-            ]);
+            ],400);
         } catch (\Exception $ex) {
             return response()->json([
                 "status" => false,
                 "message" => $ex->getMessage(),
                 "error" => $ex
-            ]);
+            ],500);
         }
     }
 
@@ -380,13 +380,13 @@ class PublicReportController extends Controller
                 "status" => false,
                 "message" => "Validation fails",
                 "error" => $ex->errors(),
-            ]);
+            ],400);
         } catch (\Exception $ex) {
             return response()->json([
                 "status" => false,
                 "message" => $ex->getMessage(),
                 "error" => $ex,
-            ]);
+            ],500);
         }
     }
 
@@ -417,7 +417,7 @@ class PublicReportController extends Controller
                 "status" => false,
                 "message" => $ex->getMessage(),
                 "error" => $ex,
-            ]);
+            ],500);
         }
     }
 
@@ -468,13 +468,13 @@ class PublicReportController extends Controller
                 "status" => false,
                 "message" => "Validation fails",
                 "error" => $ex->errors(),
-            ]);
+            ],400);
         } catch (\Exception $ex) {
             return response()->json([
                 "status" => false,
                 "message" => $ex->getMessage(),
                 "error" => $ex
-            ]);
+            ],500);
         }
     }
 
@@ -505,7 +505,7 @@ class PublicReportController extends Controller
                 "status" => false,
                 "message" => $ex->getMessage(),
                 "error" => $ex,
-            ]);
+            ],500);
         }
     }
 
@@ -544,13 +544,13 @@ class PublicReportController extends Controller
                 "status" => false,
                 "message" => "Validation fails",
                 "error" => $ex->errors(),
-            ]);
+            ],400);
         } catch (\Exception $ex) {
             return response()->json([
                 "status" => false,
                 "message" => $ex->getMessage(),
                 "error" => $ex,
-            ]);
+            ],500);
         }
     }
 
@@ -584,13 +584,13 @@ class PublicReportController extends Controller
                 "status" => false,
                 "message" => "Validation fails",
                 "error" => $ex->errors(),
-            ]);
+            ],400);
         } catch (\Exception $ex) {
             return response()->json([
                 "status" => false,
                 "message" => $ex->getMessage(),
                 "error" => $ex,
-            ]);
+            ],500);
         }
     }
 
@@ -620,7 +620,7 @@ class PublicReportController extends Controller
                 "status" => false,
                 "message" => $ex->getMessage(),
                 "error" => $ex,
-            ]);
+            ],500);
         }
     }
 
@@ -644,7 +644,7 @@ class PublicReportController extends Controller
                 "status" => false,
                 "message" => $ex->getMessage(),
                 "error" => $ex,
-            ]);
+            ],500);
         }
     }
 
@@ -689,7 +689,7 @@ class PublicReportController extends Controller
                 "status" => false,
                 "message" => $ex->getMessage(),
                 "error" => $ex,
-            ]);
+            ],500);
         }
     }
 }

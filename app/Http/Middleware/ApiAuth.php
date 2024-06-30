@@ -8,8 +8,10 @@ use Firebase\JWT\BeforeValidException;
 use Firebase\JWT\ExpiredException;
 use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
+use Firebase\JWT\SignatureInvalidException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Symfony\Component\HttpFoundation\Response;
 
 class ApiAuth
@@ -41,25 +43,25 @@ class ApiAuth
                 return response()->json([
                     "status" => false,
                     "message" => "Token invalid or token expired",
-                ]);
+                ],403);
             } catch (ExpiredException $e) {
                 return response()->json([
                     "status" => false,
                     "message" => "Token expired",
-                    "error" => $e
-                ]);
+                    "error" => $e->getMessage()
+                ],401);
             } catch (BeforeValidException $e) {
                 return response()->json([
                     "status" => false,
                     "message" => "Token not yet valid",
-                    "error" => $e
-                ]);
+                    "error" => $e->getMessage()
+                ],401);
             } catch (\Exception $e) {
                 return response()->json([
                     "status" => false,
                     "message" => "Token is invalid",
-                    "error" => $e
-                ]);
+                    "error" => $e->getMessage()
+                ],403);
             }
         }
         return response()->json([

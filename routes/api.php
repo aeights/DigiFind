@@ -70,7 +70,7 @@ Route::middleware(['api.auth'])->group(function () {
             Route::post('update', 'updateProfile')->name('api.profile.update');
             Route::post('change-password', 'changePassword')->name('api.profile.change-password');
         });
-        Route::get('logout', 'logout')->name('api.logout');
+        Route::get('logout', 'logout')->name('api.logout')->withoutMiddleware('api.auth');
     });
 
     Route::controller(UserController::class)->group(function () {
