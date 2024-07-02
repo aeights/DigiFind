@@ -112,7 +112,7 @@ class ForgotPasswordController extends Controller
                 'confirm_password' => 'required|min:6'
             ]);
     
-            $user = User::where($request->email)->first();
+            $user = User::where('email',$request->email)->first();
     
             if (!$user) {
                 return response()->json([
